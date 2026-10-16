@@ -1,0 +1,64 @@
+<div class="tablebox" data-total-id="{{ total_id }}"><table>
+    <thead><tr>
+        <th>Item</th><th class="right">Qty</th><th class="right">Rate (₹)</th><th class="right">Amount (₹)</th>
+        <th>Warehouse</th>{% if project %}<th>Decision</th>{% endif %}<th>Store</th>
+    </tr></thead>
+    <tbody>
+    {% for r in rows %}{% with l=r.line %}
+        <tr data-qty="{{ l.quantity|stringformat:"s" }}">
+            <td style="min-width:200px">
+                {% if project %}
+                    <input class="wide" name="line-{{ l.id }}-name" value="{{ l.name }}">
+                    <input style="margin-top:4px;width:60%" name="line-{{ l.id }}-make" value="{{ l.make }}" placeholder="{% if l.pick_from %}Type the make{% else %}Make{% endif %}">
+                    <label class="muted" style="margin-left:6px"><input type="checkbox" name="line-{{ l.id }}-delete"> remove</label>
+                {% else %}
+                    <b>{{ l.name }}</b>{% if l.make %}<div class="muted">{{ l.make }}</div>{% endif %}
+                {% endif %}
+            </td>
+            <td class="right" style="white-space:nowrap">
+                {% if project %}<input class="num" name="line-{{ l.id }}-quantity" value="{{ l.quantity|floatformat:"-2" }}" inputmode="decimal"> <input class="small" name="line-{{ l.id }}-unit" value="{{ l.unit }}">
+                {% else %}{{ l.quantity|floatformat:"-2" }} {{ l.unit }}{% endif %}
+            </td>
+            <td class="right"><input class="num" name="line-{{ l.id }}-rate" value="{{ l.rate|floatformat:"-2" }}" inputmode="decimal"></td>
+            <td class="right amount">{{ r.amount|floatformat:2 }}</td>
+            <td style="min-width:180px">
+                {% if l.pick_from %}
+                    <select name="line-{{ l.id }}-stock_item">
+                        <option value="">— type the make myself —</option>
+                        {% for s in r.options %}<option value="{{ s.id }}" {% if l.stock_item_id == s.id %}selected{% endif %}>{{ s.label }} ({{ s.quantity|floatformat:"-2" }} {{ s.unit }})</option>{% endfor %}
+                    </select>
+                    {% if not r.options %}<div class="muted">none in the warehouse list</div>{% else %}<div class="muted">in warehouse: pick one to use it</div>{% endif %}
+                {% elif store %}
+                    <select name="line-{{ l.id }}-stock_item">
+                        <option value="">— not in list —</option>
+                        {% for s in stocks %}<option value="{{ s.id }}" {% if l.stock_item_id == s.id %}selected{% endif %}>{{ s.label }} ({{ s.quantity|floatformat:"-2" }})</option>{% endfor %}
+                    </select>
+                {% elif r.stock %}
+                    Have <b>{{ r.stock.quantity|floatformat:"-2" }}</b> {{ r.stock.unit }}{% if r.free != r.stock.quantity %} · free <b>{{ r.free|floatformat:"-2" }}</b>{% endif %}
+                {% else %}<span class="muted">not in warehouse list</span>{% endif %}
+                {% if r.stock %}<div>{% if l.store_status == "done" and l.source == "warehouse" %}<span class="badge ok">taken</span>
+                    {% elif r.stock.quantity <= 0 %}<span class="badge bad">out of stock</span>
+                    {% elif r.enough %}<span class="badge ok">enough</span>{% else %}<span class="badge bad">not enough</span>{% endif %}</div>{% endif %}
+            </td>
+            {% if project %}
+            <td>
+                <select name="line-{{ l.id }}-source">
+                    {% for value, label in source_choices %}<option value="{{ value }}" {% if l.source == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+            </td>
+            {% endif %}
+            <td style="min-width:170px">
+                {% if store %}
+                    <select name="line-{{ l.id }}-store_status">
+                        {% for value, label in status_choices %}<option value="{{ value }}" {% if l.store_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                    <input class="wide" style="margin-top:4px" name="line-{{ l.id }}-store_note" value="{{ l.store_note }}" placeholder="Note">
+                {% else %}
+                    <span class="badge {% if l.store_status == 'done' %}ok{% elif l.store_status == 'short' %}bad{% endif %}">{{ l.get_store_status_display }}</span>
+                    {% if l.store_note %}<div class="muted">{{ l.store_note }}</div>{% endif %}
+                {% endif %}
+            </td>
+        </tr>
+    {% endwith %}{% endfor %}
+    </tbody>
+</table></div>

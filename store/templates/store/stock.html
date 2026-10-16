@@ -1,0 +1,103 @@
+{% extends "store/base.html" %}
+{% block title %}Warehouse{% endblock %}
+{% block content %}
+<h1>Warehouse</h1>
+<p class="muted">{% if store %}Keep this list true: the project person sees it when choosing warehouse or purchase.{% else %}What the store has right now. Only the store person changes it.{% endif %}</p>
+
+{% if store %}
+<h2>Add or update stock</h2>
+<form method="post" class="card" id="add-form">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <label class="muted">Search the item list (solar panel, inverter, cable, BOS item, end cap, MC4 ...) or type a new item</label>
+    <input class="wide" id="catalog-search" list="catalog-list" placeholder="e.g. emvee 580, polycab 5kw, cable gland, end cap 2x2" autocomplete="off" style="margin:4px 0 10px">
+    <datalist id="catalog-list">{% for c in catalog %}<option value="{{ c.name }}{% if c.make %} — {{ c.make }}{% endif %}">{{ c.group }}</option>{% endfor %}</datalist>
+    <div class="actions" style="margin:0">
+        <input name="new_name" id="new-name" placeholder="Item name" style="flex:1;min-width:200px" required>
+        <input name="new_make" id="new-make" placeholder="Make / size / type" style="width:200px">
+        <input class="small" name="new_unit" id="new-unit" placeholder="Unit" value="Nos">
+        <input class="num" name="new_quantity" placeholder="Qty" inputmode="decimal" required>
+        <input class="num" name="new_rate" id="new-rate" placeholder="Rate" inputmode="decimal">
+        <button class="btn" type="submit">Add to warehouse</button>
+    </div>
+    <div class="muted" style="margin-top:8px">
+        The quantity you type is <b>added</b> to what is already there when the item and make are the same (to correct a number, change it in the table below and save).
+        Panels: type the brand and the watts (Emvee 580 W). Inverters: brand and kW (Polycab 5 kW). The lists look for the same words, so
+        a 540 W panel is never used for a 580 W order. End caps and MC4: type the type in the make box (2x2, 3x1, Ningbo ...), one line for each type.
+    </div>
+</form>
+{% endif %}
+
+<h2>In the warehouse <small>{{ stocks|length }} item{{ stocks|length|pluralize }}</small></h2>
+<input class="wide" id="stock-filter" placeholder="Search the warehouse: item, make, size ..." autocomplete="off" style="margin-bottom:10px">
+
+{% if store %}
+<form method="post">{% csrf_token %}
+{% endif %}
+<div class="tablebox"><table id="stock-table">
+    <thead><tr><th>Item</th><th>Make / size / type</th><th>Unit</th><th class="right">In warehouse</th><th class="right">Rate (₹)</th>{% if store %}<th>Delete</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for s in stocks %}
+        <tr data-search="{{ s.name }} {{ s.make }}">
+        {% if store %}
+            <td><input class="wide" name="stock-{{ s.id }}-name" value="{{ s.name }}"></td>
+            <td><input name="stock-{{ s.id }}-make" value="{{ s.make }}" placeholder="e.g. 4CX10 - 19mm"></td>
+            <td><input class="small" name="stock-{{ s.id }}-unit" value="{{ s.unit }}"></td>
+            <td class="right"><input class="num" name="stock-{{ s.id }}-quantity" value="{{ s.quantity|floatformat:"-2" }}" inputmode="decimal"></td>
+            <td class="right"><input class="num" name="stock-{{ s.id }}-rate" value="{{ s.rate|floatformat:"-2" }}" inputmode="decimal"></td>
+            <td><input type="checkbox" name="stock-{{ s.id }}-delete"></td>
+        {% else %}
+            <td>{{ s.name }}</td><td>{{ s.make }}</td><td>{{ s.unit }}</td>
+            <td class="right"><b>{{ s.quantity|floatformat:"-2" }}</b></td><td class="right">{{ s.rate|floatformat:"-2" }}</td>
+        {% endif %}
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="muted">The warehouse list is empty.</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+<div class="muted" id="stock-none" style="display:none;margin-top:8px">No warehouse item matches.</div>
+{% if store and stocks %}
+<div class="actions"><button class="btn" type="submit">Save warehouse</button>
+    <span class="muted">A changed rate is applied to every open list that takes the item from the warehouse.</span></div>
+</form>
+{% elif store %}</form>{% endif %}
+
+{{ catalog|json_script:"catalog-data" }}
+<script>
+(function () {
+    // search the warehouse table
+    var filter = document.getElementById("stock-filter");
+    var rows = document.querySelectorAll("#stock-table tbody tr[data-search]");
+    var none = document.getElementById("stock-none");
+    function words(text) { return text.toLowerCase().split(/\s+/).filter(Boolean); }
+    if (filter) {
+        filter.addEventListener("input", function () {
+            var wanted = words(filter.value), shown = 0;
+            rows.forEach(function (row) {
+                var text = row.getAttribute("data-search").toLowerCase();
+                var rowInputs = row.querySelectorAll("input[type=text], input:not([type])");
+                rowInputs.forEach(function (input) { text += " " + input.value.toLowerCase(); });
+                var ok = wanted.every(function (w) { return text.indexOf(w) !== -1; });
+                row.style.display = ok ? "" : "none";
+                if (ok) { shown++; }
+            });
+            if (none) { none.style.display = (rows.length && !shown) ? "" : "none"; }
+        });
+    }
+    // choosing an item of the item list fills in the add form
+    var search = document.getElementById("catalog-search");
+    var data = [];
+    try { data = JSON.parse(document.getElementById("catalog-data").textContent); } catch (e) {}
+    if (search) {
+        search.addEventListener("input", function () {
+            var hit = data.find(function (c) { return (c.name + (c.make ? " — " + c.make : "")) === search.value; });
+            if (!hit) { return; }
+            document.getElementById("new-name").value = hit.name;
+            document.getElementById("new-make").value = hit.make;
+            document.getElementById("new-unit").value = hit.unit;
+            document.getElementById("new-rate").value = hit.rate || "";
+            document.querySelector("#add-form input[name=new_quantity]").focus();
+        });
+    }
+})();
+</script>
+{% endblock %}

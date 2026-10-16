@@ -1,0 +1,242 @@
+[
+ {
+  "name": "Aluminum Socket",
+  "make": "25mm",
+  "unit": "Nos",
+  "quantity": 8,
+  "rate": 8.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Copper Socket",
+  "make": "6mm",
+  "unit": "Nos",
+  "quantity": 15,
+  "rate": 10.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Aluminum ferul",
+  "make": "35 mm",
+  "unit": "Nos",
+  "quantity": 2,
+  "rate": 5.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Cable Gland",
+  "make": "4CX10 - 19mm",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 110.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Earth Pit Chamber",
+  "make": "6' Dia PVC-SG Power",
+  "unit": "Nos",
+  "quantity": 3,
+  "rate": 90.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Isolator",
+  "make": "40A DP",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 350.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Saddle(Clamp)",
+  "make": "16 mm",
+  "unit": "pack",
+  "quantity": 1.0,
+  "rate": 150.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Saddle(Clamp)",
+  "make": "25mm",
+  "unit": "pack",
+  "quantity": 1,
+  "rate": 202.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Elbow",
+  "make": "25 mm",
+  "unit": "Nos",
+  "quantity": 20,
+  "rate": 8.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Tee",
+  "make": "25mm",
+  "unit": "Nos",
+  "quantity": 8,
+  "rate": 8.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Bend",
+  "make": "25 mm",
+  "unit": "Nos",
+  "quantity": 30,
+  "rate": 8.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Socket",
+  "make": "25mm",
+  "unit": "Nos",
+  "quantity": 0,
+  "rate": 5.0,
+  "per_panel": 0
+ },
+ {
+  "name": "CABLE TIE",
+  "make": "300mm Nylon",
+  "unit": "pack",
+  "quantity": 1.0,
+  "rate": 120.0,
+  "per_panel": 0
+ },
+ {
+  "name": "CABLE TIE",
+  "make": "300mm  ss",
+  "unit": "Nos",
+  "quantity": 0,
+  "rate": 0,
+  "per_panel": 0
+ },
+ {
+  "name": "Condult",
+  "make": "Ivory 25mm ISL(L)",
+  "unit": "Nos",
+  "quantity": 24,
+  "rate": 55.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Cycle Screw",
+  "make": "",
+  "unit": "Nos",
+  "quantity": 2,
+  "rate": 2.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Dry Wall Screw",
+  "make": "1 1/4 inch",
+  "unit": "Nos",
+  "quantity": 200,
+  "rate": 0.04,
+  "per_panel": 0
+ },
+ {
+  "name": "Earth Bench",
+  "make": "4 Pole",
+  "unit": "Nos",
+  "quantity": 2,
+  "rate": 130.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Insulation Tap",
+  "make": "",
+  "unit": "Nos",
+  "quantity": 4,
+  "rate": 9.0,
+  "per_panel": 0
+ },
+ {
+  "name": "SCREW PLUG",
+  "make": "6mm",
+  "unit": "pack",
+  "quantity": 2.0,
+  "rate": 15.0,
+  "per_panel": 0
+ },
+ {
+  "name": "SS Nut and Bolt with Spring Washer and plate washer",
+  "make": "2.5 inch",
+  "unit": "Nos",
+  "quantity": 0,
+  "rate": 7.7,
+  "per_panel": 0
+ },
+ {
+  "name": "Cable Tray",
+  "make": "45X45 PVC",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 150.0,
+  "per_panel": 0
+ },
+ {
+  "name": "j bolt",
+  "make": "",
+  "unit": "Nos",
+  "quantity": 24,
+  "rate": 15.4,
+  "per_panel": 4
+ },
+ {
+  "name": "Earthing Compound",
+  "make": "10 Kg Excel Earthing",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 480.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Flexible Pipe",
+  "make": "16 mm",
+  "unit": "m",
+  "quantity": 2.0,
+  "rate": 4.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Printed Ferules, sleeves, Solar Labels",
+  "make": "",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 200.0,
+  "per_panel": 0
+ },
+ {
+  "name": "Panel to Panel Earthing",
+  "make": "Lugs + Nut + bolt",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 30.0,
+  "per_panel": 0
+ },
+ {
+  "name": "lock fix",
+  "make": "",
+  "unit": "Nos",
+  "quantity": 1,
+  "rate": 350.0,
+  "per_panel": 0
+ },
+ {
+  "name": "self screw",
+  "make": "1.25",
+  "unit": "Nos",
+  "quantity": 4,
+  "rate": 5.0,
+  "per_panel": 0
+ },
+ {
+  "name": "nut bolt washer",
+  "make": "6mm",
+  "unit": "Nos",
+  "quantity": 4,
+  "rate": 15.0,
+  "per_panel": 0
+ }
+]

@@ -1,0 +1,506 @@
+[
+ {
+  "group": "Solar panels",
+  "name": "Adani BIFACIAL 545 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 14306.25
+ },
+ {
+  "group": "Solar panels",
+  "name": "Adani BIFACIAL 550 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 14437.5
+ },
+ {
+  "group": "Solar panels",
+  "name": "Adani BIFACIAL 555 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 14568.75
+ },
+ {
+  "group": "Solar panels",
+  "name": "Adani TOPCON 600 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 16320.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Adani TOPCON 610 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 16592.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Adani TOPCON 620 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 16864.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Adani TOPCON 630 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 17136.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Waree TOPCON 600 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 17100.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Waree TOPCON 610 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 17385.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Waree TOPCON 620 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 17670.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Waree TOPCON 630 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 17955.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Emvee TOPCON 565 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 14125.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Emvee TOPCON 580 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 14500.0
+ },
+ {
+  "group": "Solar panels",
+  "name": "Emvee TOPCON 610 W",
+  "make": "",
+  "unit": "Nos",
+  "rate": 15250.0
+ },
+ {
+  "group": "Inverters",
+  "name": "POLYCAB 3KW 1PH SINGLE",
+  "make": "",
+  "unit": "Nos",
+  "rate": 15510.0
+ },
+ {
+  "group": "Inverters",
+  "name": "POLYCAB 4KW 1PH SINGLE",
+  "make": "",
+  "unit": "Nos",
+  "rate": 19415.0
+ },
+ {
+  "group": "Inverters",
+  "name": "POLYCAB 5KW 1PH DUAL",
+  "make": "",
+  "unit": "Nos",
+  "rate": 24750.0
+ },
+ {
+  "group": "Inverters",
+  "name": "POLYCAB 5KW 3PH DUAL",
+  "make": "",
+  "unit": "Nos",
+  "rate": 50328.0
+ },
+ {
+  "group": "Boxes",
+  "name": "ACDB 1 IN 1 OUT 1PH",
+  "make": "",
+  "unit": "Nos",
+  "rate": 1350.0
+ },
+ {
+  "group": "Boxes",
+  "name": "ACDB 2 IN 2 OUT 3PH",
+  "make": "",
+  "unit": "Nos",
+  "rate": 2750.0
+ },
+ {
+  "group": "Boxes",
+  "name": "DCDB 1 IN 1 OUT 1PH",
+  "make": "",
+  "unit": "Nos",
+  "rate": 1550.0
+ },
+ {
+  "group": "Boxes",
+  "name": "DCDB 2 IN 2 OUT 3PH",
+  "make": "",
+  "unit": "Nos",
+  "rate": 3000.0
+ },
+ {
+  "group": "Boxes",
+  "name": "Meter box SINGLE 1 PH",
+  "make": "",
+  "unit": "Nos",
+  "rate": 800.0
+ },
+ {
+  "group": "Boxes",
+  "name": "Meter box THREE 3PH",
+  "make": "",
+  "unit": "Nos",
+  "rate": 1000.0
+ },
+ {
+  "group": "Cables",
+  "name": "DC cable 4 SQMM",
+  "make": "POLYCAB",
+  "unit": "m",
+  "rate": 70.0
+ },
+ {
+  "group": "Cables",
+  "name": "DC cable 6 SQMM",
+  "make": "POLYCAB",
+  "unit": "m",
+  "rate": 90.0
+ },
+ {
+  "group": "Cables",
+  "name": "AC cable 4 SQMM",
+  "make": "POLYCAB",
+  "unit": "m",
+  "rate": 65.0
+ },
+ {
+  "group": "Cables",
+  "name": "AC cable 4 SQMM",
+  "make": "V GUARD",
+  "unit": "m",
+  "rate": 65.0
+ },
+ {
+  "group": "Cables",
+  "name": "AC cable 4 SQMM",
+  "make": "FINOLEX",
+  "unit": "m",
+  "rate": 65.0
+ },
+ {
+  "group": "Cables",
+  "name": "AC cable UG 2C 6 SQMM",
+  "make": "POLYCAB",
+  "unit": "m",
+  "rate": 85.0
+ },
+ {
+  "group": "Cables",
+  "name": "AC cable UG 4C 6 SQMM",
+  "make": "POLYCAB",
+  "unit": "m",
+  "rate": 95.0
+ },
+ {
+  "group": "Cables",
+  "name": "Earthing cable 25 SQMM",
+  "make": "CANBERRY",
+  "unit": "m",
+  "rate": 28.0
+ },
+ {
+  "group": "Earthing",
+  "name": "Earth Rod",
+  "make": "EXCEL 300 MICRON",
+  "unit": "Nos",
+  "rate": 300.0
+ },
+ {
+  "group": "Earthing",
+  "name": "Lightning Arrestor",
+  "make": "EXCEL 300 MICRON",
+  "unit": "Nos",
+  "rate": 650.0
+ },
+ {
+  "group": "Meters",
+  "name": "Energy Meter 1PH",
+  "make": "L&K",
+  "unit": "Nos",
+  "rate": 2000.0
+ },
+ {
+  "group": "Meters",
+  "name": "Energy Meter 3PH",
+  "make": "L&K",
+  "unit": "Nos",
+  "rate": 4250.0
+ },
+ {
+  "group": "Meters",
+  "name": "Net Meter 1PH",
+  "make": "L&K",
+  "unit": "Nos",
+  "rate": 5100.0
+ },
+ {
+  "group": "Meters",
+  "name": "Net Meter 3PH",
+  "make": "L&K",
+  "unit": "Nos",
+  "rate": 8400.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Aluminum Socket",
+  "make": "25mm",
+  "unit": "Nos",
+  "rate": 8.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Copper Socket",
+  "make": "6mm",
+  "unit": "Nos",
+  "rate": 10.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Aluminum ferul",
+  "make": "35 mm",
+  "unit": "Nos",
+  "rate": 5.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Cable Gland",
+  "make": "4CX10 - 19mm",
+  "unit": "Nos",
+  "rate": 110.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Earth Pit Chamber",
+  "make": "6' Dia PVC-SG Power",
+  "unit": "Nos",
+  "rate": 90.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Isolator",
+  "make": "40A DP",
+  "unit": "Nos",
+  "rate": 350.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Saddle(Clamp)",
+  "make": "16 mm",
+  "unit": "pack",
+  "rate": 150.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Saddle(Clamp)",
+  "make": "25mm",
+  "unit": "pack",
+  "rate": 202.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Elbow",
+  "make": "25 mm",
+  "unit": "Nos",
+  "rate": 8.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Tee",
+  "make": "25mm",
+  "unit": "Nos",
+  "rate": 8.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Bend",
+  "make": "25 mm",
+  "unit": "Nos",
+  "rate": 8.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Socket",
+  "make": "25mm",
+  "unit": "Nos",
+  "rate": 5.0
+ },
+ {
+  "group": "BOS items",
+  "name": "CABLE TIE",
+  "make": "300mm Nylon",
+  "unit": "pack",
+  "rate": 120.0
+ },
+ {
+  "group": "BOS items",
+  "name": "CABLE TIE",
+  "make": "300mm  ss",
+  "unit": "Nos",
+  "rate": 0.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Condult",
+  "make": "Ivory 25mm ISL(L)",
+  "unit": "Nos",
+  "rate": 55.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Cycle Screw",
+  "make": "",
+  "unit": "Nos",
+  "rate": 2.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Dry Wall Screw",
+  "make": "1 1/4 inch",
+  "unit": "Nos",
+  "rate": 0.04
+ },
+ {
+  "group": "BOS items",
+  "name": "Earth Bench",
+  "make": "4 Pole",
+  "unit": "Nos",
+  "rate": 130.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Insulation Tap",
+  "make": "",
+  "unit": "Nos",
+  "rate": 9.0
+ },
+ {
+  "group": "BOS items",
+  "name": "SCREW PLUG",
+  "make": "6mm",
+  "unit": "pack",
+  "rate": 15.0
+ },
+ {
+  "group": "BOS items",
+  "name": "SS Nut and Bolt with Spring Washer and plate washer",
+  "make": "2.5 inch",
+  "unit": "Nos",
+  "rate": 7.7
+ },
+ {
+  "group": "BOS items",
+  "name": "Cable Tray",
+  "make": "45X45 PVC",
+  "unit": "Nos",
+  "rate": 150.0
+ },
+ {
+  "group": "BOS items",
+  "name": "j bolt",
+  "make": "",
+  "unit": "Nos",
+  "rate": 15.4
+ },
+ {
+  "group": "BOS items",
+  "name": "Earthing Compound",
+  "make": "10 Kg Excel Earthing",
+  "unit": "Nos",
+  "rate": 480.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Flexible Pipe",
+  "make": "16 mm",
+  "unit": "m",
+  "rate": 4.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Printed Ferules, sleeves, Solar Labels",
+  "make": "",
+  "unit": "Nos",
+  "rate": 200.0
+ },
+ {
+  "group": "BOS items",
+  "name": "Panel to Panel Earthing",
+  "make": "Lugs + Nut + bolt",
+  "unit": "Nos",
+  "rate": 30.0
+ },
+ {
+  "group": "BOS items",
+  "name": "lock fix",
+  "make": "",
+  "unit": "Nos",
+  "rate": 350.0
+ },
+ {
+  "group": "BOS items",
+  "name": "self screw",
+  "make": "1.25",
+  "unit": "Nos",
+  "rate": 5.0
+ },
+ {
+  "group": "BOS items",
+  "name": "nut bolt washer",
+  "make": "6mm",
+  "unit": "Nos",
+  "rate": 15.0
+ },
+ {
+  "group": "End cap / MC4",
+  "name": "End cap",
+  "make": "1.5X1.5",
+  "unit": "Nos",
+  "rate": 3
+ },
+ {
+  "group": "End cap / MC4",
+  "name": "End cap",
+  "make": "2x2",
+  "unit": "Nos",
+  "rate": 4
+ },
+ {
+  "group": "End cap / MC4",
+  "name": "End cap",
+  "make": "3x1",
+  "unit": "Nos",
+  "rate": 5
+ },
+ {
+  "group": "End cap / MC4",
+  "name": "MC4 connector",
+  "make": "Ningbo",
+  "unit": "Nos",
+  "rate": 40
+ }
+]

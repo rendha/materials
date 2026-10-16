@@ -1,0 +1,14 @@
+{% extends "store/base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="card" style="max-width:380px;margin:40px auto">
+    <h1>Log in</h1>
+    {% if form.errors %}<div class="msg error">Wrong username or password.</div>{% endif %}
+    <form method="post">{% csrf_token %}
+        <p><label>Username<br><input class="wide" type="text" name="username" autofocus autocomplete="username"></label></p>
+        <p><label>Password<br><input class="wide" type="password" name="password" autocomplete="current-password"></label></p>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="btn" type="submit">Log in</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "store/base.html" %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block content %}
+<h1>{{ customer.name }}</h1>
+<div class="muted">{{ customer.offer_no }}{% if customer.system_size %} · {{ customer.system_size }} kW{% endif %}{% if customer.location %} · {{ customer.location }}{% endif %}{% if customer.phone %} · {{ customer.phone }}{% endif %}{% if customer.person %} · for {{ customer.person }}{% endif %}</div>
+<p>
+    {% if customer.status == "draft" %}<span class="badge warn">Project person is preparing the list</span>
+    {% elif customer.status == "sent" %}<span class="badge">With the store</span>
+    {% else %}<span class="badge ok">Completed</span>{% endif %}
+    {% if undecided %}<span class="badge warn">{{ undecided }} item{{ undecided|pluralize }} not decided</span>{% endif %}
+    {% if short %}<span class="badge bad">{{ short }} item{{ short|pluralize }} not available: the project person should choose purchase</span>{% endif %}
+</p>
+<div class="card">
+    <b>Take from warehouse:</b> ₹{{ warehouse_total|floatformat:2 }} &nbsp; · &nbsp; <b>To purchase:</b> ₹{{ purchase_total|floatformat:2 }}
+    <div class="muted">Rates are editable by both of you. The warehouse figures come from the Warehouse page, kept by the store person.</div>
+</div>
+
+<form method="post">
+{% csrf_token %}
+{% if project and customer.status != "done" %}
+<div class="card noprint">
+    <b>Set every item at once</b> <span class="muted">(you can still change any item afterwards)</span>
+    <div class="actions" style="margin:8px 0 0">
+        <button class="btn light" type="submit" name="action" value="all_warehouse" onclick="return confirm('Set EVERY item to take from the warehouse?')">All from warehouse</button>
+        <button class="btn light" type="submit" name="action" value="all_purchase" onclick="return confirm('Set EVERY item to purchase?')">All purchase</button>
+        <button class="btn light" type="submit" name="action" value="all_auto">Warehouse where available, rest purchase</button>
+    </div>
+</div>
+{% endif %}
+
+{% for g in groups %}
+<h2>{{ g.title }} <small>{{ g.rows|length }} item{{ g.rows|length|pluralize }} · ₹<span id="tot-{{ g.source }}">{{ g.total|floatformat:2 }}</span></small>
+    {% if g.source != "undecided" %}<a class="btn light noprint" style="padding:5px 12px;font-size:12px;margin-left:8px" href="{% url 'export' customer.pk g.source %}">Download CSV</a>{% endif %}</h2>
+{% include "store/_table.html" with rows=g.rows total_id="tot-"|add:g.source %}
+{% endfor %}
+
+{% if project %}
+<h2>Add an item</h2>
+<div class="card">
+    <input class="wide" id="item-search" list="item-list" placeholder="Search the item list: panel, inverter, cable, meter ... (or type your own below)" autocomplete="off" style="margin-bottom:10px">
+    <datalist id="item-list">{% for c in catalog %}<option value="{{ c.name }}{% if c.make %} &mdash; {{ c.make }}{% endif %}">{{ c.group }}</option>{% endfor %}</datalist>
+    <div class="actions" style="margin:0">
+        <input name="new_name" id="add-name" placeholder="Item name" style="flex:1;min-width:200px">
+        <input name="new_make" id="add-make" placeholder="Make" style="width:140px">
+        <input class="small" name="new_unit" id="add-unit" value="Nos">
+        <input class="num" name="new_quantity" placeholder="Qty" inputmode="decimal">
+        <input class="num" name="new_rate" id="add-rate" placeholder="Rate" inputmode="decimal">
+        <button class="btn light" type="submit" name="action" value="add_line">Add</button>
+    </div>
+</div>
+{{ catalog|json_script:"item-data" }}
+<script>
+(function () {
+    var box = document.getElementById("item-search"), data = [];
+    try { data = JSON.parse(document.getElementById("item-data").textContent); } catch (e) {}
+    if (!box) { return; }
+    box.addEventListener("input", function () {
+        var hit = data.find(function (c) { return (c.name + (c.make ? " \u2014 " + c.make : "")) === box.value; });
+        if (!hit) { return; }
+        document.getElementById("add-name").value = hit.name;
+        document.getElementById("add-make").value = hit.make;
+        document.getElementById("add-unit").value = hit.unit;
+        document.getElementById("add-rate").value = hit.rate || "";
+        document.querySelector("input[name=new_quantity]").focus();
+    });
+})();
+</script>
+{% endif %}
+
+<!-- BOS KIT: one line, one decision; open it only to change an item -->
+<h2>BOS kit</h2>
+<div class="card" style="padding:0">
+    <div style="padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+        <div>
+            <b>BOS kit ({{ bos_rows|length }} item{{ bos_rows|length|pluralize }})</b> &nbsp; ₹<span id="tot-bos">{{ bos_total|floatformat:2 }}</span>
+            {% if customer.bos_quoted %}<span class="muted"> · BOS amount in the quotation: ₹{{ customer.bos_quoted|floatformat:2 }}</span>{% endif %}
+            <div class="muted" style="margin-top:4px">warehouse {{ bos_counts.warehouse }} · purchase {{ bos_counts.purchase }}{% if bos_counts.undecided %} · <b>{{ bos_counts.undecided }} not decided</b>{% endif %} · done {{ bos_counts.done }}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            {% if project %}
+            <select name="bos_source" title="One decision for the whole kit">
+                {% if kit_source == "mixed" %}<option value="mixed" selected>Mixed (see items)</option>{% endif %}
+                <option value="auto">Warehouse where available, rest purchase</option>
+                {% for value, label in source_choices %}<option value="{{ value }}" {% if kit_source == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            {% else %}
+            <span class="badge">{% if kit_source == "mixed" %}Mixed{% elif kit_source == "warehouse" %}Take from warehouse{% elif kit_source == "purchase" %}Purchase{% else %}Not decided{% endif %}</span>
+            {% endif %}
+            {% if store %}
+            <select name="bos_status" title="One status for the whole kit">
+                {% if kit_status == "mixed" %}<option value="mixed" selected>Mixed (see items)</option>{% endif %}
+                {% for value, label in status_choices %}<option value="{{ value }}" {% if kit_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+            {% endif %}
+        </div>
+    </div>
+    {% if bos_short %}
+    <div style="margin:0 16px 14px;padding:12px 14px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b">
+        <b>{{ bos_short|length }} BOS item{{ bos_short|length|pluralize }} not fully in the warehouse</b> (these will be bought). Please check:
+        <ul style="margin:6px 0 0 18px;padding:0">
+        {% for s in bos_short %}<li>{{ s.name }} &mdash; need {{ s.quantity }} {{ s.unit }}: {{ s.reason }}</li>{% endfor %}
+        </ul>
+        <div style="margin-top:6px;font-size:13px">The rest of the kit comes from the warehouse. To buy the whole kit, including the items that are in the warehouse, choose Purchase above.</div>
+    </div>
+    {% endif %}
+    <details style="border-top:1px solid #e5e7eb">
+        <summary style="cursor:pointer;padding:12px 16px;color:#3B73B9;font-weight:bold;font-size:14px">Open the kit: edit items, rates and quantities (change one item if something is not available)</summary>
+        <div style="padding:0 16px 16px">
+            {% include "store/_table.html" with rows=bos_rows total_id="tot-bos" %}
+            {% if project %}
+            <div class="actions" style="margin:12px 0 0">
+                <input name="new_bos_name" placeholder="Another BOS item" style="flex:1;min-width:180px">
+                <input name="new_bos_make" placeholder="Make" style="width:120px">
+                <input class="small" name="new_bos_unit" value="Nos">
+                <input class="num" name="new_bos_quantity" placeholder="Qty" inputmode="decimal">
+                <input class="num" name="new_bos_rate" placeholder="Rate" inputmode="decimal">
+                <button class="btn light" type="submit" name="action" value="add_bos">Add to BOS</button>
+            </div>
+            {% endif %}
+        </div>
+    </details>
+</div>
+
+<!-- LABOUR: the quotation's structure wage and electrical work -->
+<h2>Labour</h2>
+<div class="tablebox"><table>
+    <thead><tr><th>Work</th><th class="right">Amount in the quotation (₹)</th><th>Done by</th><th>Name</th><th class="right">Advance (₹)</th><th class="right">Balance (₹)</th></tr></thead>
+    <tbody>
+    {% for w in labour %}
+        <tr>
+            <td><b>{{ w.label }}</b></td>
+            {% if project %}
+            <td class="right"><input class="num" name="labour-{{ w.id }}-amount" value="{{ w.amount|floatformat:"-2" }}" inputmode="decimal"></td>
+            <td>
+                <select class="labour-type" name="labour-{{ w.id }}-worker_type">
+                    <option value="staff" {% if w.worker_type == "staff" %}selected{% endif %}>Company staff</option>
+                    <option value="contract" {% if w.worker_type == "contract" %}selected{% endif %}>Contract</option>
+                </select>
+            </td>
+            <td><input name="labour-{{ w.id }}-worker_name" value="{{ w.worker_name }}" placeholder="Staff / contractor name"></td>
+            <td class="right"><input class="num labour-advance" name="labour-{{ w.id }}-advance" value="{{ w.advance|floatformat:"-2" }}" inputmode="decimal" {% if w.worker_type != "contract" %}disabled{% endif %}></td>
+            {% else %}
+            <td class="right">{{ w.amount|floatformat:2 }}</td>
+            <td>{{ w.get_worker_type_display }}</td>
+            <td>{{ w.worker_name }}</td>
+            <td class="right">{% if w.worker_type == "contract" %}{{ w.advance|floatformat:2 }}{% else %}-{% endif %}</td>
+            {% endif %}
+            <td class="right">{% if w.worker_type == "contract" %}{{ w.balance|floatformat:2 }}{% else %}-{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table></div>
+<div class="muted" style="margin-top:6px">Choose Contract to give an advance. Company staff have no advance here.</div>
+
+<div class="actions">
+    <button class="btn" type="submit" name="action" value="save">Save changes</button>
+    {% if project and customer.status == "draft" %}<button class="btn light" type="submit" name="action" value="auto" title="Decides the items that are 'Not decided' from the warehouse stock">Decide from warehouse</button>{% endif %}
+    {% if project and customer.status == "draft" %}<button class="btn green" type="submit" name="action" value="send">Send to the store</button>{% endif %}
+    {% if customer.status == "sent" %}<button class="btn green" type="submit" name="action" value="complete">Mark completed</button>{% endif %}
+    {% if project and customer.status == "done" %}<button class="btn light" type="submit" name="action" value="reopen">Open again</button>{% endif %}
+    <a class="btn light" href="javascript:window.print()">Print</a>
+</div>
+</form>
+
+<script>
+// the Amount column and the section total follow the Qty and Rate boxes as you type (saved with "Save changes")
+function toNumber(value) { var n = parseFloat(String(value).replace(/,/g, "")); return isNaN(n) ? 0 : n; }
+document.addEventListener("input", function (event) {
+    var row = event.target.closest("tr[data-qty]");
+    if (!row) { return; }
+    var qtyBox = row.querySelector('input[name$="-quantity"]');
+    var rateBox = row.querySelector('input[name$="-rate"]');
+    var amount = (qtyBox ? toNumber(qtyBox.value) : toNumber(row.getAttribute("data-qty"))) * (rateBox ? toNumber(rateBox.value) : 0);
+    row.querySelector(".amount").textContent = amount.toFixed(2);
+    var box = row.closest(".tablebox");
+    var target = box && document.getElementById(box.getAttribute("data-total-id"));
+    if (target) {
+        var total = 0;
+        box.querySelectorAll(".amount").forEach(function (cell) { total += toNumber(cell.textContent); });
+        target.textContent = total.toFixed(2);
+    }
+});
+document.querySelectorAll(".labour-type").forEach(function (select) {
+    function update() {
+        var advance = select.closest("tr").querySelector(".labour-advance");
+        if (advance) { advance.disabled = select.value !== "contract"; }
+    }
+    select.addEventListener("change", update);
+    update();
+});
+</script>
+{% endblock %}

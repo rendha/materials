@@ -1,0 +1,62 @@
+{% extends "store/base.html" %}
+{% block title %}Specifications{% endblock %}
+{% block content %}
+<h1>Check the specifications</h1>
+<p class="muted">Only these few things are taken from the quotation. The quotation website then works out the whole material list with <b>its own rates</b> (inverter, cables, meters, boxes, structure, BOS, labour), the same way as when it makes a quotation. Correct anything that is wrong or empty.</p>
+{% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+{% for w in warnings %}<div class="msg">{{ w }}</div>{% endfor %}
+<form method="post">{% csrf_token %}<input type="hidden" name="specs_create" value="1">
+    <h2>Customer</h2>
+    <div class="card">
+        <div class="actions" style="margin:0 0 10px">
+            <input name="name" value="{{ fields.name }}" placeholder="Customer / business name *" style="flex:1;min-width:220px" required>
+            <input name="person" value="{{ fields.person }}" placeholder="Quotation for (person)" style="width:200px">
+            <input name="offer_no" value="{{ fields.offer_no }}" placeholder="Quotation number" style="width:200px">
+        </div>
+        <div class="actions" style="margin:0">
+            <input name="phone" value="{{ fields.phone }}" placeholder="Phone" style="width:160px">
+            <input name="location" value="{{ fields.location }}" placeholder="Place" style="flex:1;min-width:160px">
+        </div>
+    </div>
+
+    <h2>System</h2>
+    <div class="card"><div class="actions" style="margin:0">
+        <label>System size (kW) *<br><input class="num" name="spec_system_size" value="{{ specs.system_size }}" inputmode="decimal" required></label>
+        <label>Phase<br><select name="spec_phase">
+            <option value="single" {% if specs.phase != "three" %}selected{% endif %}>Single phase</option>
+            <option value="three" {% if specs.phase == "three" %}selected{% endif %}>Three phase</option></select></label>
+        <label>Structure<br><select name="spec_structure">
+            <option value="roof" {% if specs.structure == "roof" or not specs.structure %}selected{% endif %}>Roof (RCC / sheet roof)</option>
+            <option value="gp" {% if specs.structure == "gp" %}selected{% endif %}>GP</option>
+            <option value="gi" {% if specs.structure == "gi" %}selected{% endif %}>GI</option></select></label>
+        <label>Subsidy<br><select name="spec_dcr">
+            <option value="" {% if not specs.dcr %}selected{% endif %}>Not said</option>
+            <option value="dcr" {% if specs.dcr == "dcr" %}selected{% endif %}>DCR (with subsidy)</option>
+            <option value="non_dcr" {% if specs.dcr == "non_dcr" %}selected{% endif %}>Non-DCR</option></select></label>
+    </div></div>
+
+    <h2>Solar panels</h2>
+    <div class="card"><div class="actions" style="margin:0">
+        <label>Brand<br><input name="spec_panel_company" value="{{ specs.panel_company }}" placeholder="Adani, Waree, Emvee"></label>
+        <label>Technology<br><input name="spec_panel_type" value="{{ specs.panel_type }}" placeholder="TOPCon, Bifacial" style="width:140px"></label>
+        <label>Watts<br><input class="num" name="spec_panel_watts" value="{{ specs.panel_watts }}" inputmode="decimal"></label>
+        <label>up to (if a range)<br><input class="num" name="spec_panel_watts_max" value="{{ specs.panel_watts_max }}" inputmode="decimal"></label>
+        <label>Number of panels<br><input class="num" name="spec_panel_quantity" value="{{ specs.panel_quantity }}" inputmode="decimal" placeholder="auto"></label>
+    </div>
+    <div class="muted" style="margin-top:8px">A range such as 600-620 W takes the highest panel of that brand inside it that the quotation website has a rate for. Leave the number of panels empty to let it work it out from the kW.</div></div>
+
+    <h2>Inverter and cables</h2>
+    <div class="card"><div class="actions" style="margin:0">
+        <label>Inverter (kW)<br><input class="num" name="spec_inverter_kw" value="{{ specs.inverter_kw }}" inputmode="decimal" placeholder="= system"></label>
+        <label>DC cable (m)<br><input class="num" name="spec_dc_cable_m" value="{{ specs.dc_cable_m }}" inputmode="decimal" placeholder="30"></label>
+        <label>DC cable (sq.mm)<br><input class="num" name="spec_dc_cable_sqmm" value="{{ specs.dc_cable_sqmm }}" inputmode="decimal" placeholder="4"></label>
+        <label>AC wire (m)<br><input class="num" name="spec_ac_wire_m" value="{{ specs.ac_wire_m }}" inputmode="decimal" placeholder="20"></label>
+    </div></div>
+
+    <div class="actions">
+        <button class="btn green" type="submit">Get the materials and rates from the quotation website</button>
+        <a class="btn light" href="{% url 'import' %}">Cancel</a>
+    </div>
+    <div class="muted">The BOS kit, End cap, MC4 and labour are added as for any customer, and the warehouse decides what comes from stock.</div>
+</form>
+{% endblock %}

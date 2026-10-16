@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Materials{% endblock %} - Dehlsen Energy</title>
+    {% load static %}
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#3B73B9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Materials">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'store/icon-192.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'store/apple-touch-icon.png' %}">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f4f7fb; color: #1f2937; }
+        .top { background: #3B73B9; color: white; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+        .top .brand { font-weight: bold; font-size: 18px; margin-right: auto; }
+        .top a, .top button { color: white; text-decoration: none; font-size: 14px; background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit; }
+        .top a:hover, .top button:hover { text-decoration: underline; }
+        .wrap { max-width: 1100px; margin: auto; padding: 20px; }
+        h1 { margin: 0 0 4px; font-size: 24px; }
+        h2 { margin: 26px 0 8px; font-size: 18px; }
+        h2 small { color: #6b7280; font-weight: normal; font-size: 14px; margin-left: 8px; }
+        .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .muted { color: #6b7280; font-size: 13px; }
+        .tablebox { overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        table { border-collapse: collapse; width: 100%; min-width: 760px; }
+        th { text-align: left; font-size: 12px; color: #6b7280; text-transform: uppercase; padding: 10px 8px; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 8px; border-bottom: 1px solid #f0f2f5; vertical-align: top; font-size: 14px; }
+        input, select { font: inherit; padding: 8px; border: 1px solid #d1d5db; border-radius: 7px; background: white; max-width: 100%; }
+        input.num { width: 90px; text-align: right; }
+        input.wide { width: 100%; }
+        input.small { width: 64px; }
+        .btn { display: inline-block; background: #3B73B9; color: white; border: 0; border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn.light { background: #eef4fb; color: #3B73B9; }
+        .btn.green { background: #15803d; }
+        .actions { margin: 16px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .badge { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: bold; background: #e5e7eb; color: #374151; }
+        .badge.ok { background: #dcfce7; color: #166534; }
+        .badge.warn { background: #fef3c7; color: #92400e; }
+        .badge.bad { background: #fee2e2; color: #991b1b; }
+        .msg { padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; background: #eef4fb; }
+        .msg.error { background: #fef2f2; color: #b91c1c; }
+        .msg.success { background: #f0fdf4; color: #166534; }
+        .right { text-align: right; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        a.cardlink { color: inherit; text-decoration: none; display: block; }
+        @media print { .top, .actions, .noprint { display: none; } body { background: white; } }
+    </style>
+</head>
+<body>
+<div class="top">
+    <span class="brand">Dehlsen Materials</span>
+    {% if user.is_authenticated %}
+        <a href="{% url 'home' %}">Customers</a>
+        <a href="{% url 'stock' %}">Warehouse</a>
+        <a href="{% url 'import' %}">+ New customer</a>
+        <span class="muted" style="color:#dbe7f7">{{ user.get_username }}</span>
+        <form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}<button type="submit">Log out</button></form>
+    {% endif %}
+</div>
+<div class="wrap">
+    {% for message in messages %}<div class="msg {{ message.tags }}">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+</div>
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("{% url 'service_worker' %}", { scope: "/" }).catch(function () {}); });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends "store/base.html" %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<h1>Customers</h1>
+<p class="muted">{% if project %}Quotations that became customers. Choose warehouse or purchase for each item, then send the list to the store.{% else %}Lists sent to you by the project person.{% endif %}</p>
+{% if not project and not store %}<div class="msg error">Your login has no role yet. Ask the owner to add you to the Project or the Store group.</div>{% endif %}
+<div class="grid">
+{% for row in rows %}
+    <a class="cardlink" href="{% url 'customer' row.customer.pk %}"><div class="card">
+        <b>{{ row.customer.name }}</b>
+        <div class="muted">{{ row.customer.offer_no }}{% if row.customer.system_size %} · {{ row.customer.system_size }} kW{% endif %}{% if row.customer.location %} · {{ row.customer.location }}{% endif %}</div>
+        <p style="margin:10px 0 6px">
+            {% if row.customer.status == "draft" %}<span class="badge warn">Preparing</span>
+            {% elif row.customer.status == "sent" %}<span class="badge">With the store</span>
+            {% else %}<span class="badge ok">Completed</span>{% endif %}
+            {% if row.short %}<span class="badge bad">{{ row.short }} not available</span>{% endif %}
+        </p>
+        <div class="muted">{{ row.total }} items · warehouse {{ row.warehouse }} · purchase {{ row.purchase }}{% if row.undecided %} · <b>{{ row.undecided }} not decided</b>{% endif %} · done {{ row.done }}</div>
+    </div></a>
+{% empty %}
+    <div class="card">No customers yet.{% if project %} Use “New customer”.{% endif %}</div>
+{% endfor %}
+</div>
+{% endblock %}

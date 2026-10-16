@@ -1,0 +1,54 @@
+{% extends "store/base.html" %}
+{% block title %}New customer{% endblock %}
+{% block content %}
+<h1>New customer</h1>
+<p class="muted">A quotation made in our quotation website becomes a customer here with its list of materials. A quotation made somewhere else (Excel, another software, a handwritten one) can be typed in below.</p>
+{% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+
+<form method="get" class="actions">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search by name, offer number, place" style="flex:1;min-width:200px">
+    <button class="btn" type="submit">Search</button>
+</form>
+
+{% for r in results %}
+<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+        <b>{{ r.business_name }}</b> <span class="muted">{{ r.offer_no }}</span><br>
+        <span class="muted">{{ r.system_size }} kW · {{ r.location }}{% if r.customer_name %} · for {{ r.customer_name }}{% endif %} · {{ r.date }}</span>
+    </div>
+    <form method="post">{% csrf_token %}<input type="hidden" name="quotation_id" value="{{ r.id }}"><button class="btn" type="submit">Make customer</button></form>
+</div>
+{% empty %}
+    {% if not error %}<div class="card">No confirmed quotation found. In the quotation website, open the accepted quotation and tap “Confirm as customer”.</div>{% endif %}
+{% endfor %}
+
+<h2>The quotation was not made in our quotation website</h2>
+<form method="post" enctype="multipart/form-data" class="card">{% csrf_token %}
+    <b>Upload the quotation PDF</b>
+    <p class="muted" style="margin:4px 0 10px">Only the specifications are read from it: the panel (brand, watts, how many), the inverter kW, the phase, the structure and the cable lengths, with the customer details. The quotation website then works out the materials and rates from them, the way it does for its own quotations. You check everything first. It must be a PDF with real text, not a scan or a photo.</p>
+    <input type="file" name="pdf" accept="application/pdf,.pdf" required>
+    <button class="btn" type="submit">Read the PDF</button>
+</form>
+<p class="muted">No PDF? <a href="?specs=1">Type the specifications in</a>, or type the customer in and add the items yourself:</p>
+<form method="post" class="card">{% csrf_token %}<input type="hidden" name="manual" value="1">
+    <div class="actions" style="margin:0 0 10px">
+        <input name="name" placeholder="Customer / business name *" style="flex:1;min-width:220px" required>
+        <input name="person" placeholder="Quotation for (person)" style="width:200px">
+        <input name="offer_no" placeholder="Quotation number (optional)" style="width:200px">
+    </div>
+    <div class="actions" style="margin:0 0 10px">
+        <input name="phone" placeholder="Phone" style="width:160px">
+        <input name="location" placeholder="Place" style="flex:1;min-width:160px">
+        <input class="small" name="system_size" placeholder="kW" style="width:80px">
+    </div>
+    <button class="btn" type="submit">Create customer</button>
+    <span class="muted"> Then add the panels, inverter, cables and so on with “Add an item” (search the item list); the BOS kit, End cap, MC4 and the labour rows are added for you.</span>
+</form>
+
+<h2>If the quotation website cannot be reached</h2>
+<form method="post" class="card">{% csrf_token %}
+    <p class="muted" style="margin-top:0">Paste the JSON of the quotation (what the quotation website shows at its /api/materials/?id=… address).</p>
+    <textarea name="json_text" rows="5" style="width:100%;font-family:monospace"></textarea>
+    <p><button class="btn light" type="submit">Make customer from this</button></p>
+</form>
+{% endblock %}
