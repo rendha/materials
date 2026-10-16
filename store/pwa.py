@@ -7,7 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.templatetags.static import static
 
-CACHE_VERSION = "v1"          # change this text when the icons / offline page change, so phones fetch the new ones
+CACHE_VERSION = "v2"          # change this text when the icons / offline page change, so phones fetch the new ones
 
 
 def manifest(request):
@@ -19,8 +19,8 @@ def manifest(request):
         "scope": "/",
         "display": "standalone",
         "orientation": "any",
-        "background_color": "#3B73B9",
-        "theme_color": "#3B73B9",
+        "background_color": "#E8730C",
+        "theme_color": "#E8730C",
         "icons": [
             {"src": static("store/icon-192.png"), "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
             {"src": static("store/icon-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
