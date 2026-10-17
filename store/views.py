@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime as _datetime
 import json
 import re
 from pathlib import Path
@@ -13,7 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from . import pdf_import, services
-from .models import BosItem, Customer, Labour, Line, Stock
+from .models import BosItem, Customer, Labour, Line, Payment, Stock
 
 ZERO = Decimal("0")
 
@@ -34,6 +35,16 @@ def is_project(user):
 def is_store(user):
     """The Store person: keeps the warehouse stock and does the picking / purchasing."""
     return user.is_superuser or user.groups.filter(name="Store").exists()
+
+
+def is_accounts(user):
+    """The Accounts person: records the money received from the customers."""
+    return user.is_superuser or user.groups.filter(name="Accounts").exists()
+
+
+def is_boss(user):
+    """The boss: sees every customer, the money and the profit; changes nothing."""
+    return user.is_superuser or user.groups.filter(name="Boss").exists()
 
 
 def _roles(request):
@@ -203,6 +214,11 @@ def _needed(lines):
 @login_required
 def home(request):
     project, store = _roles(request)
+    if not (project or store):
+        if is_boss(request.user):
+            return redirect("boss")                      # the boss starts at his dashboard
+        if is_accounts(request.user):
+            return redirect("accounts")                  # the Accounts person only works with payments
     customers = Customer.objects.prefetch_related("lines")
     if not project:
         customers = customers.exclude(status=Customer.DRAFT)       # the store sees a customer only after it was sent
@@ -241,7 +257,8 @@ def create_customer(data):
             offer_no=str(data.get("offer_no", ""))[:100], name=str(data.get("business_name") or "Customer")[:200],
             person=str(data.get("customer_name", ""))[:200], phone=str(data.get("phone", ""))[:50],
             location=str(data.get("location", ""))[:200], system_size=str(data.get("system_size", ""))[:20],
-            bos_quoted=bos_quoted)
+            bos_quoted=bos_quoted,
+            quoted_total=services.to_decimal(data.get("final_price") or data.get("price_estimate"), ZERO))
         position = 0
 
         def add(name, make, unit, quantity, rate, group=Line.MAIN, pick_from=""):
@@ -553,12 +570,16 @@ def _add_line(request, customer, group):
 def customer_detail(request, pk):
     project, store = _roles(request)
     customer = get_object_or_404(Customer, pk=pk)
-    if not (project or store):
+    boss_view = not (project or store) and is_boss(request.user)
+    if not (project or store or boss_view):
         return HttpResponseForbidden("Ask the owner to give you the Project or the Store role.")
-    if customer.status == Customer.DRAFT and not project:
+    if boss_view and request.method == "POST":
+        return HttpResponseForbidden("The boss can only look at a list, not change it.")
+    if customer.status == Customer.DRAFT and not (project or boss_view):
         return HttpResponseForbidden("This list has not been sent to the store yet.")
 
-    relink(customer)
+    if not boss_view:
+        relink(customer)
     if request.method == "GET" and project and customer.status == Customer.DRAFT:
         merge_balances(customer)         # new stock arrived for a split item: join it up again
         auto_decide(customer)            # every item still "Not decided" follows the warehouse by itself
@@ -641,7 +662,7 @@ def customer_detail(request, pk):
             reason = "not enough in the warehouse (have %s)" % s.quantity.normalize()
         bos_short.append({"name": l.name, "quantity": l.quantity.normalize(), "unit": l.unit, "reason": reason})
     return render(request, "store/customer.html", {
-        "bos_short": bos_short, "catalog": _catalog() if project else [],
+        "bos_short": bos_short, "catalog": _catalog() if project else [], "boss_view": boss_view,
         "customer": customer, "groups": groups, "project": project, "store": store,
         "stocks": Stock.objects.all(),
         "bos_rows": bos_rows, "bos_total": sum((r["amount"] for r in bos_rows), ZERO),
@@ -696,7 +717,7 @@ def _catalog():
 @login_required
 def stock_list(request):
     project, store = _roles(request)
-    if not (project or store):
+    if not (project or store or is_boss(request.user)):
         return HttpResponseForbidden("Ask the owner to give you the Project or the Store role.")
     if request.method == "POST":
         if not store:
@@ -756,3 +777,166 @@ def stock_list(request):
             messages.success(request, "Warehouse saved." + (" The new rate was applied to %d open list item%s." % (updated, "" if updated == 1 else "s") if updated else ""))
         return redirect("stock")
     return render(request, "store/stock.html", {"stocks": Stock.objects.all(), "project": project, "store": store, "catalog": _catalog()})
+
+
+# ---------------------------------------------------------------------------------------------- accounts: money received
+def _fetch_quoted_total(customer):
+    """Asks the quotation website for the final price of this customer's quotation.  True when it was saved."""
+    if customer.quotation_id is None:
+        return False
+    try:
+        data = services.get_quotation(customer.quotation_id)
+    except services.QuotationApiError:
+        return False
+    price = services.to_decimal(data.get("final_price"), ZERO)
+    if price <= 0:
+        return False
+    customer.quoted_total = price
+    customer.save(update_fields=["quoted_total"])
+    return True
+
+
+def _money(text):
+    """'25,000.50' -> Decimal, or None when it is not a number above zero."""
+    try:
+        value = Decimal(str(text).replace(",", "").strip())
+    except Exception:
+        return None
+    return value.quantize(Decimal("0.01")) if value.is_finite() and value > 0 else None
+
+
+@login_required
+def accounts_home(request):
+    if not is_accounts(request.user):
+        return HttpResponseForbidden("Only the Accounts person sees the payments.")
+    if request.method == "POST" and request.POST.get("action") == "fetch_prices":
+        got = failed = 0
+        for customer in Customer.objects.filter(quotation_id__isnull=False, quoted_total=0)[:40]:
+            if _fetch_quoted_total(customer):
+                got += 1
+            else:
+                failed += 1
+        messages.success(request, "Quotation amount fetched for %d customer%s." % (got, "" if got == 1 else "s") + (" %d could not be fetched." % failed if failed else ""))
+        return redirect("accounts")
+    query = request.GET.get("q", "").strip().lower()
+    due_only = request.GET.get("due") == "1"
+    rows, total_agreed, total_paid = [], ZERO, ZERO
+    for customer in Customer.objects.prefetch_related("payments"):
+        text = " ".join([customer.name, customer.person, customer.offer_no, customer.phone, customer.location]).lower()
+        if query and not all(word in text for word in query.split()):
+            continue
+        payments = list(customer.payments.all())
+        paid = sum((p.amount for p in payments), ZERO)
+        balance = customer.total_due - paid
+        if due_only and not (customer.total_due > 0 and balance > 0):
+            continue
+        rows.append({"customer": customer, "paid": paid, "balance": balance, "count": len(payments),
+                     "last": max((p.paid_on for p in payments), default=None)})
+        total_agreed += customer.total_due
+        total_paid += paid
+    return render(request, "store/accounts_home.html", {
+        "rows": rows, "q": request.GET.get("q", ""), "due": due_only,
+        "total_agreed": total_agreed, "total_paid": total_paid, "total_balance": total_agreed - total_paid})
+
+
+@login_required
+def accounts_customer(request, pk):
+    if not is_accounts(request.user):
+        return HttpResponseForbidden("Only the Accounts person sees the payments.")
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "add_payment":
+            amount = _money(request.POST.get("amount"))
+            try:
+                paid_on = _datetime.strptime(request.POST.get("paid_on", ""), "%Y-%m-%d").date()
+            except ValueError:
+                paid_on = None
+            mode = request.POST.get("mode", "")
+            if amount is None:
+                messages.error(request, "Type the amount received (a number above zero).")
+            elif paid_on is None:
+                messages.error(request, "Choose the date of the payment.")
+            else:
+                Payment.objects.create(customer=customer, amount=amount, paid_on=paid_on,
+                                       mode=mode if mode in dict(Payment.MODES) else Payment.OTHER,
+                                       note=request.POST.get("note", "").strip()[:200], recorded_by=request.user.get_username()[:150])
+                messages.success(request, "Payment of \u20b9%s saved." % amount)
+        elif action == "delete_payment":
+            deleted, _ = Payment.objects.filter(pk=request.POST.get("payment_id"), customer=customer).delete()
+            if deleted:
+                messages.success(request, "Payment removed.")
+        elif action == "refresh_price":
+            if _fetch_quoted_total(customer):
+                messages.success(request, "The quotation amount was updated.")
+            else:
+                messages.error(request, "Could not get the amount from the quotation website (not a quotation of that website, or it did not answer).")
+        elif action == "set_agreed":
+            raw = request.POST.get("agreed_amount", "").strip()
+            amount = ZERO if raw == "" else _money(raw)
+            if amount is None:
+                messages.error(request, "The amount must be a number.")
+            else:
+                customer.agreed_amount = amount
+                customer.save(update_fields=["agreed_amount"])
+                messages.success(request, "Saved: the quotation amount is used." if amount == 0 else "Saved: this amount is used instead of the quotation amount.")
+        return redirect("accounts_customer", pk=customer.pk)
+    if customer.quoted_total <= 0 and customer.quotation_id is not None:
+        _fetch_quoted_total(customer)                    # the first time: take the price from the quotation
+    payments = list(customer.payments.all())
+    paid = sum((p.amount for p in payments), ZERO)
+    return render(request, "store/accounts_customer.html", {
+        "customer": customer, "payments": payments, "paid": paid, "balance": customer.total_due - paid,
+        "modes": Payment.MODES, "today": timezone.localdate().isoformat()})
+
+
+# ---------------------------------------------------------------------------------------------- boss dashboard
+GST_PERCENT = Decimal("9")          # the quotation's GST (the quotation website adds 9% once, after the margin)
+
+
+def _customer_money(customer):
+    """Money of one customer.  Profit = the quotation without GST - material cost - labour wages.
+    Other charges of the quotation (transport, KSEB fee, loading, documentation) are not on this site, so they are not counted."""
+    lines = [l for l in customer.lines.all() if l.quantity > 0]
+    material = sum((l.amount for l in lines), ZERO)
+    labour = sum((x.amount for x in customer.labour.all()), ZERO)
+    paid = sum((p.amount for p in customer.payments.all()), ZERO)
+    total = customer.total_due
+    without_gst = (total / (1 + GST_PERCENT / 100)).quantize(Decimal("0.01")) if total > 0 else None
+    profit = (without_gst - material - labour) if without_gst is not None else None
+    margin = (profit / without_gst * 100).quantize(Decimal("0.1")) if profit is not None and without_gst else None
+    return {"customer": customer, "total": total, "paid": paid, "balance": total - paid if total > 0 else None,
+            "material": material, "labour": labour, "profit": profit, "margin": margin,
+            "undecided": sum(1 for l in lines if l.source == Line.UNDECIDED),
+            "short": sum(1 for l in lines if l.store_status == Line.SHORT)}
+
+
+@login_required
+def boss_home(request):
+    if not is_boss(request.user):
+        return HttpResponseForbidden("Only the boss sees this page.")
+    query = request.GET.get("q", "").strip().lower()
+    rows = []
+    for customer in Customer.objects.prefetch_related("lines", "labour", "payments"):
+        text = " ".join([customer.name, customer.person, customer.offer_no, customer.phone, customer.location]).lower()
+        if query and not all(word in text for word in query.split()):
+            continue
+        rows.append(_customer_money(customer))
+    priced = [r for r in rows if r["profit"] is not None]
+    total = sum((r["total"] for r in rows), ZERO)
+    paid = sum((r["paid"] for r in rows), ZERO)
+    stock_value = sum((s.quantity * s.rate for s in Stock.objects.all()), ZERO)
+    today = timezone.localdate()
+    this_month = sum(1 for r in rows if timezone.localtime(r["customer"].created_at).date().replace(day=1) == today.replace(day=1))
+    profit_total = sum((r["profit"] for r in priced), ZERO)
+    without_gst = sum((r["total"] / (1 + GST_PERCENT / 100) for r in priced), ZERO)
+    return render(request, "store/boss_home.html", {
+        "rows": rows, "q": request.GET.get("q", ""), "count": len(rows), "this_month": this_month,
+        "total": total, "paid": paid, "balance": total - paid,
+        "material": sum((r["material"] for r in rows), ZERO), "labour": sum((r["labour"] for r in rows), ZERO),
+        "profit": profit_total, "margin": (profit_total / without_gst * 100).quantize(Decimal("0.1")) if without_gst else None,
+        "unpriced": len(rows) - len(priced), "stock_value": stock_value,
+        "owing": sorted([r for r in rows if r["balance"] is not None and r["balance"] > 0], key=lambda r: r["balance"], reverse=True)[:8],
+        "waiting": [r for r in rows if r["customer"].status == Customer.DRAFT and r["undecided"]],
+        "short": [r for r in rows if r["short"]],
+        "empty_stock": list(Stock.objects.filter(quantity__lte=0)[:20])})

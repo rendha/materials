@@ -1,0 +1,66 @@
+{% extends "store/base.html" %}
+{% block title %}{{ customer.name }} - payments{% endblock %}
+{% block content %}
+<p><a href="{% url 'accounts' %}">&larr; All payments</a></p>
+<h1>{{ customer.name }}</h1>
+<p class="muted">{{ customer.offer_no }}{% if customer.person %} · {{ customer.person }}{% endif %}{% if customer.phone %} · {{ customer.phone }}{% endif %}{% if customer.location %} · {{ customer.location }}{% endif %}{% if customer.system_size %} · {{ customer.system_size }} kW{% endif %}</p>
+
+<div class="grid" style="margin:14px 0">
+    <div class="card" style="margin:0"><div class="muted">To be paid (in all)</div><div style="font-size:22px;font-weight:bold">{% if customer.total_due %}₹{{ customer.total_due|floatformat:2 }}{% else %}not known{% endif %}</div>
+        <div class="muted">{% if customer.agreed_amount %}typed by accounts{% elif customer.quoted_total %}from the quotation{% if not customer.quotation_id %} (estimate, type the real amount below){% endif %}{% endif %}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Received</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ paid|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Balance</div>
+        <div style="font-size:22px;font-weight:bold;color:#991b1b">{% if customer.total_due %}{% if balance <= 0 %}<span class="badge ok">Paid in full</span>{% else %}₹{{ balance|floatformat:2 }}{% endif %}{% else %}—{% endif %}</div></div>
+</div>
+
+<h2>Add a payment</h2>
+<form method="post" class="card">{% csrf_token %}<input type="hidden" name="action" value="add_payment">
+    <div class="actions" style="margin:0">
+        <input class="num" name="amount" placeholder="Amount ₹" inputmode="decimal" required style="width:130px">
+        <input type="date" name="paid_on" value="{{ today }}" required>
+        <select name="mode">{% for value, label in modes %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+        <input name="note" placeholder="Note: cheque no., reference, advance, final ..." style="flex:1;min-width:200px" maxlength="200">
+        <button class="btn green" type="submit">Save payment</button>
+    </div>
+</form>
+
+<h2>Amount to be paid by the customer</h2>
+<div class="card">
+    <div class="muted" style="margin-bottom:10px">
+        Quotation amount (with GST): <b>{% if customer.quoted_total %}₹{{ customer.quoted_total|floatformat:2 }}{% else %}not available{% endif %}</b>
+        {% if customer.quotation_id %}
+        <form method="post" style="display:inline;margin-left:10px">{% csrf_token %}<input type="hidden" name="action" value="refresh_price"><button class="btn light" type="submit" style="padding:5px 12px">Update from the quotation</button></form>
+        {% else %}· this customer was not made in the quotation website, so the amount above is only an estimate{% endif %}
+    </div>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="set_agreed">
+        <div class="actions" style="margin:0">
+            <input class="num" name="agreed_amount" value="{% if customer.agreed_amount %}{{ customer.agreed_amount|floatformat:2 }}{% endif %}" placeholder="Different amount ₹" inputmode="decimal" style="width:180px">
+            <button class="btn light" type="submit">Save</button>
+            <span class="muted">Leave empty to use the quotation amount. Type an amount only when the customer agreed to pay a different one.</span>
+        </div>
+    </form>
+</div>
+
+<h2>Payments received <small>{{ payments|length }}</small></h2>
+<div class="tablebox">
+<table>
+    <thead><tr><th>Date</th><th class="right">Amount</th><th>Mode</th><th>Note</th><th>Entered by</th><th></th></tr></thead>
+    <tbody>
+    {% for p in payments %}
+        <tr>
+            <td>{{ p.paid_on|date:"d M Y" }}</td>
+            <td class="right"><b>₹{{ p.amount|floatformat:2 }}</b></td>
+            <td>{{ p.get_mode_display }}</td>
+            <td>{{ p.note }}</td>
+            <td class="muted">{{ p.recorded_by }}</td>
+            <td><form method="post" style="margin:0" onsubmit="return confirm('Remove this payment of ₹{{ p.amount|floatformat:2 }}?');">{% csrf_token %}
+                <input type="hidden" name="action" value="delete_payment"><input type="hidden" name="payment_id" value="{{ p.pk }}">
+                <button type="submit" style="background:none;border:0;color:#b91c1c;cursor:pointer;font-size:13px">Remove</button></form></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="muted" style="padding:18px">No payment recorded yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

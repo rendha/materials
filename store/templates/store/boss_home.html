@@ -1,0 +1,58 @@
+{% extends "store/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="muted">Everything at a glance. You can open any customer to look at it; nothing here can be changed.</p>
+
+<div class="grid" style="margin:14px 0">
+    <div class="card" style="margin:0"><div class="muted">Customers</div><div style="font-size:22px;font-weight:bold">{{ count }}</div><div class="muted">{{ this_month }} new this month</div></div>
+    <div class="card" style="margin:0"><div class="muted">Quotation value (with GST)</div><div style="font-size:22px;font-weight:bold">₹{{ total|floatformat:2 }}</div>{% if unpriced %}<div class="muted">{{ unpriced }} customer{{ unpriced|pluralize }} without an amount</div>{% endif %}</div>
+    <div class="card" style="margin:0"><div class="muted">Received</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ paid|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Balance to receive</div><div style="font-size:22px;font-weight:bold;color:#991b1b">₹{{ balance|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Material cost</div><div style="font-size:22px;font-weight:bold">₹{{ material|floatformat:2 }}</div><div class="muted">labour wages ₹{{ labour|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Profit (estimate)</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ profit|floatformat:2 }}</div>{% if margin is not None %}<div class="muted">{{ margin }}% of the amount without GST</div>{% endif %}</div>
+    <div class="card" style="margin:0"><div class="muted">Warehouse stock value</div><div style="font-size:22px;font-weight:bold">₹{{ stock_value|floatformat:2 }}</div></div>
+</div>
+<p class="muted">Profit = quotation without GST − material cost − labour wages. Transport, KSEB fee, loading and documentation are not counted.</p>
+
+{% if owing or waiting or short or empty_stock %}
+<h2>Needs attention</h2>
+<div class="grid">
+    {% if owing %}<div class="card" style="margin:0"><b>Biggest balances to receive</b>
+        {% for r in owing %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'customer' r.customer.pk %}">{{ r.customer.name }}</a><b>₹{{ r.balance|floatformat:2 }}</b></div>{% endfor %}</div>{% endif %}
+    {% if waiting %}<div class="card" style="margin:0"><b>Lists waiting for a warehouse / purchase decision</b>
+        {% for r in waiting %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'customer' r.customer.pk %}">{{ r.customer.name }}</a><span class="badge warn">{{ r.undecided }} not decided</span></div>{% endfor %}</div>{% endif %}
+    {% if short %}<div class="card" style="margin:0"><b>Items not available (store marked short)</b>
+        {% for r in short %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'customer' r.customer.pk %}">{{ r.customer.name }}</a><span class="badge bad">{{ r.short }} item{{ r.short|pluralize }}</span></div>{% endfor %}</div>{% endif %}
+    {% if empty_stock %}<div class="card" style="margin:0"><b>Out of stock in the warehouse</b>
+        {% for s in empty_stock %}<div style="margin-top:6px">{{ s.label }}</div>{% endfor %}</div>{% endif %}
+</div>
+{% endif %}
+
+<h2>Customers</h2>
+<form method="get" class="actions" style="margin-top:0">
+    <input class="wide" name="q" value="{{ q }}" placeholder="Search a customer: name, offer no, phone, place" autocomplete="off" style="flex:1;min-width:220px">
+    <button class="btn light" type="submit">Search</button>
+</form>
+<div class="tablebox">
+<table style="min-width:900px">
+    <thead><tr><th>Customer</th><th>Status</th><th class="right">Quotation</th><th class="right">Received</th><th class="right">Balance</th><th class="right">Material</th><th class="right">Labour</th><th class="right">Profit</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+        <tr>
+            <td><a href="{% url 'customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a><div class="muted">{{ r.customer.offer_no }}{% if r.customer.system_size %} · {{ r.customer.system_size }} kW{% endif %}{% if r.customer.location %} · {{ r.customer.location }}{% endif %}</div></td>
+            <td>{% if r.customer.status == "draft" %}<span class="badge">Preparing</span>{% elif r.customer.status == "sent" %}<span class="badge warn">With the store</span>{% else %}<span class="badge ok">Completed</span>{% endif %}</td>
+            <td class="right">{% if r.total %}₹{{ r.total|floatformat:2 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="right">₹{{ r.paid|floatformat:2 }}</td>
+            <td class="right">{% if r.balance is not None %}{% if r.balance <= 0 %}<span class="badge ok">Paid</span>{% else %}<b>₹{{ r.balance|floatformat:2 }}</b>{% endif %}{% else %}—{% endif %}</td>
+            <td class="right">₹{{ r.material|floatformat:2 }}</td>
+            <td class="right">₹{{ r.labour|floatformat:2 }}</td>
+            <td class="right">{% if r.profit is not None %}<b style="color:{% if r.profit < 0 %}#991b1b{% else %}#166534{% endif %}">₹{{ r.profit|floatformat:2 }}</b>{% if r.margin is not None %}<div class="muted">{{ r.margin }}%</div>{% endif %}{% else %}—{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="8" class="muted" style="padding:18px">No customers found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

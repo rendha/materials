@@ -1,6 +1,7 @@
 {% extends "store/base.html" %}
 {% block title %}{{ customer.name }}{% endblock %}
 {% block content %}
+{% if boss_view %}<div class="msg">View only: the boss can look at this list but not change it. <a href="{% url 'boss' %}">&larr; Dashboard</a></div>{% endif %}
 <h1>{{ customer.name }}</h1>
 <div class="muted">{{ customer.offer_no }}{% if customer.system_size %} · {{ customer.system_size }} kW{% endif %}{% if customer.location %} · {{ customer.location }}{% endif %}{% if customer.phone %} · {{ customer.phone }}{% endif %}{% if customer.person %} · for {{ customer.person }}{% endif %}</div>
 <p>
@@ -37,8 +38,7 @@
 {% if project %}
 <h2>Add an item</h2>
 <div class="card">
-    <input class="wide" id="item-search" list="item-list" placeholder="Search the item list: panel, inverter, cable, meter ... (or type your own below)" autocomplete="off" style="margin-bottom:10px">
-    <datalist id="item-list">{% for c in catalog %}<option value="{{ c.name }}{% if c.make %} &mdash; {{ c.make }}{% endif %}">{{ c.group }}</option>{% endfor %}</datalist>
+    <input class="wide" id="item-search" placeholder="Search the item list: panel, inverter, cable, meter ... (or type your own below)" autocomplete="off" style="margin-bottom:10px">
     <div class="actions" style="margin:0">
         <input name="new_name" id="add-name" placeholder="Item name" style="flex:1;min-width:200px">
         <input name="new_make" id="add-make" placeholder="Make" style="width:140px">
@@ -54,9 +54,7 @@
     var box = document.getElementById("item-search"), data = [];
     try { data = JSON.parse(document.getElementById("item-data").textContent); } catch (e) {}
     if (!box) { return; }
-    box.addEventListener("input", function () {
-        var hit = data.find(function (c) { return (c.name + (c.make ? " \u2014 " + c.make : "")) === box.value; });
-        if (!hit) { return; }
+    itemPicker(box, data, function (hit) {
         document.getElementById("add-name").value = hit.name;
         document.getElementById("add-make").value = hit.make;
         document.getElementById("add-unit").value = hit.unit;

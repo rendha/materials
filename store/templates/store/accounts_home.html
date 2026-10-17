@@ -1,0 +1,41 @@
+{% extends "store/base.html" %}
+{% block title %}Payments{% endblock %}
+{% block content %}
+<h1>Payments</h1>
+<p class="muted">Money received from the customers. Open a customer to add a payment.</p>
+
+<div class="grid" style="margin:14px 0">
+    <div class="card" style="margin:0"><div class="muted">To be received (all)</div><div style="font-size:22px;font-weight:bold">₹{{ total_agreed|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Received</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ total_paid|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Balance to receive</div><div style="font-size:22px;font-weight:bold;color:#991b1b">₹{{ total_balance|floatformat:2 }}</div></div>
+</div>
+
+<form method="post" style="margin:0 0 6px">{% csrf_token %}<input type="hidden" name="action" value="fetch_prices">
+    <button class="btn light" type="submit">Fetch the missing quotation amounts</button>
+    <span class="muted">The amount to be received comes from each customer's quotation.</span></form>
+<form method="get" class="actions" style="margin-top:0">
+    <input class="wide" name="q" value="{{ q }}" placeholder="Search a customer: name, offer no, phone, place" autocomplete="off" style="flex:1;min-width:220px">
+    <label style="font-size:14px"><input type="checkbox" name="due" value="1" {% if due %}checked{% endif %}> only with balance</label>
+    <button class="btn light" type="submit">Search</button>
+</form>
+
+<div class="tablebox">
+<table>
+    <thead><tr><th>Customer</th><th class="right">To pay</th><th class="right">Paid</th><th class="right">Balance</th><th>Last payment</th><th></th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr>
+            <td><b>{{ row.customer.name }}</b><div class="muted">{{ row.customer.offer_no }}{% if row.customer.location %} · {{ row.customer.location }}{% endif %}{% if row.customer.system_size %} · {{ row.customer.system_size }} kW{% endif %}</div></td>
+            <td class="right">{% if row.customer.total_due %}₹{{ row.customer.total_due|floatformat:2 }}{% else %}<span class="badge warn">no amount</span>{% endif %}</td>
+            <td class="right">₹{{ row.paid|floatformat:2 }}</td>
+            <td class="right">{% if row.customer.total_due %}{% if row.balance <= 0 %}<span class="badge ok">Paid</span>{% else %}<b>₹{{ row.balance|floatformat:2 }}</b>{% endif %}{% else %}—{% endif %}</td>
+            <td>{% if row.last %}{{ row.last|date:"d M Y" }} <span class="muted">({{ row.count }})</span>{% else %}<span class="muted">none yet</span>{% endif %}</td>
+            <td><a class="btn light" href="{% url 'accounts_customer' row.customer.pk %}">Open</a></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="muted" style="padding:18px">No customers found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

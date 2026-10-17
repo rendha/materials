@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.utils import timezone
 
 
 class Stock(models.Model):
@@ -53,12 +54,19 @@ class Customer(models.Model):
     location = models.CharField(max_length=200, blank=True)
     system_size = models.CharField(max_length=20, blank=True)
     bos_quoted = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))      # the BOS amount inside the quotation
+    quoted_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))    # the final price of the quotation (with GST), taken from the quotation website
+    agreed_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))   # typed by the accountant ONLY when the customer pays a different amount
     status = models.CharField(max_length=10, choices=STATUS, default=DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
+
+    @property
+    def total_due(self):
+        """What the customer has to pay in all: the amount the accountant typed (a negotiated price), else the quotation's final price."""
+        return self.agreed_amount if self.agreed_amount > 0 else self.quoted_total
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.offer_no)
@@ -124,3 +132,23 @@ class Labour(models.Model):
 
     def __str__(self):
         return "%s - %s" % (self.customer, self.label)
+
+
+class Payment(models.Model):
+    """Money received from a customer.  Typed in by the Accounts person."""
+    CASH, BANK, UPI, CHEQUE, OTHER = "cash", "bank", "upi", "cheque", "other"
+    MODES = [(CASH, "Cash"), (BANK, "Bank transfer"), (UPI, "UPI"), (CHEQUE, "Cheque"), (OTHER, "Other")]
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="payments")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    paid_on = models.DateField(default=timezone.localdate)
+    mode = models.CharField(max_length=10, choices=MODES, default=BANK)
+    note = models.CharField(max_length=200, blank=True)             # cheque no., transaction id, "advance", "final" ...
+    recorded_by = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-paid_on", "-id"]
+
+    def __str__(self):
+        return "%s  %s  %s" % (self.customer, self.paid_on, self.amount)

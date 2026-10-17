@@ -48,16 +48,74 @@
         .right { text-align: right; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
         a.cardlink { color: inherit; text-decoration: none; display: block; }
+        .pick-box { position: relative; }
+        .pick-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 30; background: white; border: 1px solid #d1d5db; border-radius: 8px;
+                     box-shadow: 0 6px 18px rgba(0,0,0,0.15); max-height: 320px; overflow-y: auto; margin-top: -6px; }
+        .pick-list div { padding: 12px 14px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; gap: 12px; cursor: pointer; font-size: 15px; }
+        .pick-list div:last-child { border-bottom: 0; }
+        .pick-list div:hover, .pick-list div.on { background: #eef4fb; }
+        .pick-list small { color: #6b7280; white-space: nowrap; }
         @media print { .top, .actions, .noprint { display: none; } body { background: white; } }
     </style>
+    <script>
+    // A search box with a tap-to-choose list under it.  (The browser's own <datalist> shows nothing on many phones.)
+    function itemPicker(input, data, onPick) {
+        if (!input) { return; }
+        var holder = document.createElement("div");
+        holder.className = "pick-box";
+        input.parentNode.insertBefore(holder, input);
+        holder.appendChild(input);
+        var list = document.createElement("div");
+        list.className = "pick-list";
+        list.style.display = "none";
+        holder.appendChild(list);
+        var shown = [];
+        function label(c) { return c.name + (c.make ? " \u2014 " + c.make : ""); }
+        function close() { list.style.display = "none"; }
+        function choose(c) { input.value = label(c); close(); onPick(c); }
+        function render() {
+            var words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+            list.innerHTML = "";
+            if (!words.length) { close(); return; }
+            shown = data.filter(function (c) {
+                var text = (c.name + " " + (c.make || "") + " " + (c.group || "")).toLowerCase();
+                return words.every(function (w) { return text.indexOf(w) !== -1; });
+            }).slice(0, 15);
+            if (!shown.length) { close(); return; }
+            shown.forEach(function (c) {
+                var row = document.createElement("div");
+                var left = document.createElement("span"); left.textContent = label(c);
+                var right = document.createElement("small"); right.textContent = c.group || "";
+                row.appendChild(left); row.appendChild(right);
+                row.addEventListener("mousedown", function (e) { e.preventDefault(); choose(c); });
+                row.addEventListener("touchend", function (e) { e.preventDefault(); choose(c); });
+                list.appendChild(row);
+            });
+            list.style.display = "block";
+        }
+        input.addEventListener("input", render);
+        input.addEventListener("focus", render);
+        input.addEventListener("blur", function () { setTimeout(close, 150); });
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") { close(); }
+            if (e.key === "Enter" && list.style.display === "block" && shown.length) { e.preventDefault(); choose(shown[0]); }
+        });
+    }
+    </script>
 </head>
 <body>
 <div class="top">
     <span class="brand">Dehlsen Materials</span>
     {% if user.is_authenticated %}
+        {% if is_boss %}<a href="{% url 'boss' %}">Dashboard</a>{% endif %}
+        {% if not no_work_role %}
         <a href="{% url 'home' %}">Customers</a>
         <a href="{% url 'stock' %}">Warehouse</a>
         <a href="{% url 'import' %}">+ New customer</a>
+        {% elif boss_view_only %}
+        <a href="{% url 'stock' %}">Warehouse</a>
+        {% endif %}
+        {% if is_accounts %}<a href="{% url 'accounts' %}">Payments</a>{% endif %}
         <span class="muted" style="color:#dbe7f7">{{ user.get_username }}</span>
         <form method="post" action="{% url 'logout' %}" style="margin:0">{% csrf_token %}<button type="submit">Log out</button></form>
     {% endif %}
