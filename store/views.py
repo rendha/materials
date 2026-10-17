@@ -571,6 +571,8 @@ def customer_detail(request, pk):
     project, store = _roles(request)
     customer = get_object_or_404(Customer, pk=pk)
     boss_view = not (project or store) and is_boss(request.user)
+    if boss_view:
+        return redirect("boss_customer", pk=pk)
     if not (project or store or boss_view):
         return HttpResponseForbidden("Ask the owner to give you the Project or the Store role.")
     if boss_view and request.method == "POST":
@@ -987,3 +989,20 @@ def boss_detail(request, kind):
                     groups.append({"customer": r["customer"], "items": items, "amount": sum((l.amount for l in items), ZERO)})
             context.update(groups=groups, total=sum((g["amount"] for g in groups), ZERO))
     return render(request, "store/boss_detail.html", context)
+
+
+@login_required
+def boss_customer(request, pk):
+    """What the boss sees when he opens a customer: the money, not the working list."""
+    if not is_boss(request.user):
+        return HttpResponseForbidden("Only the boss sees this page.")
+    customer = get_object_or_404(Customer.objects.prefetch_related("lines", "labour", "payments"), pk=pk)
+    money = _customer_money(customer)
+    items = [l for l in customer.lines.all() if l.quantity > 0]
+    context = {
+        "customer": customer, "m": money, "payments": list(customer.payments.all()),
+        "purchase_items": [l for l in items if l.source == Line.PURCHASE],
+        "warehouse_items": [l for l in items if l.source == Line.WAREHOUSE],
+        "undecided_items": [l for l in items if l.source == Line.UNDECIDED],
+    }
+    return render(request, "store/boss_customer.html", context)

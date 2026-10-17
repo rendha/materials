@@ -23,11 +23,11 @@
 <h2>Needs attention</h2>
 <div class="grid">
     {% if owing %}<div class="card" style="margin:0"><b>Biggest balances to receive</b>
-        {% for r in owing %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'customer' r.customer.pk %}">{{ r.customer.name }}</a><b>₹{{ r.balance|floatformat:2 }}</b></div>{% endfor %}</div>{% endif %}
+        {% for r in owing %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'boss_customer' r.customer.pk %}">{{ r.customer.name }}</a><b>₹{{ r.balance|floatformat:2 }}</b></div>{% endfor %}</div>{% endif %}
     {% if waiting %}<div class="card" style="margin:0"><b>Lists waiting for a warehouse / purchase decision</b>
-        {% for r in waiting %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'customer' r.customer.pk %}">{{ r.customer.name }}</a><span class="badge warn">{{ r.undecided }} not decided</span></div>{% endfor %}</div>{% endif %}
+        {% for r in waiting %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'boss_customer' r.customer.pk %}">{{ r.customer.name }}</a><span class="badge warn">{{ r.undecided }} not decided</span></div>{% endfor %}</div>{% endif %}
     {% if short %}<div class="card" style="margin:0"><b>Items not available (store marked short)</b>
-        {% for r in short %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'customer' r.customer.pk %}">{{ r.customer.name }}</a><span class="badge bad">{{ r.short }} item{{ r.short|pluralize }}</span></div>{% endfor %}</div>{% endif %}
+        {% for r in short %}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px"><a href="{% url 'boss_customer' r.customer.pk %}">{{ r.customer.name }}</a><span class="badge bad">{{ r.short }} item{{ r.short|pluralize }}</span></div>{% endfor %}</div>{% endif %}
     {% if empty_stock %}<div class="card" style="margin:0"><b>Out of stock in the warehouse</b>
         {% for s in empty_stock %}<div style="margin-top:6px">{{ s.label }}</div>{% endfor %}</div>{% endif %}
 </div>
@@ -44,7 +44,7 @@
     <tbody>
     {% for r in rows %}
         <tr>
-            <td><a href="{% url 'customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a><div class="muted">{{ r.customer.offer_no }}{% if r.customer.system_size %} · {{ r.customer.system_size }} kW{% endif %}{% if r.customer.location %} · {{ r.customer.location }}{% endif %}</div></td>
+            <td><a href="{% url 'boss_customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a><div class="muted">{{ r.customer.offer_no }}{% if r.customer.system_size %} · {{ r.customer.system_size }} kW{% endif %}{% if r.customer.location %} · {{ r.customer.location }}{% endif %}</div></td>
             <td>{% if r.customer.status == "draft" %}<span class="badge">Preparing</span>{% elif r.customer.status == "sent" %}<span class="badge warn">With the store</span>{% else %}<span class="badge ok">Completed</span>{% endif %}</td>
             <td class="right">{% if r.total %}₹{{ r.total|floatformat:2 }}{% else %}<span class="muted">—</span>{% endif %}</td>
             <td class="right">₹{{ r.paid|floatformat:2 }}</td>

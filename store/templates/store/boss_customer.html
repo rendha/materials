@@ -1,0 +1,56 @@
+{% extends "store/base.html" %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'boss' %}">&larr; Dashboard</a></p>
+<h1>{{ customer.name }}</h1>
+<p class="muted">{{ customer.offer_no }}{% if customer.phone %} · {{ customer.phone }}{% endif %}{% if customer.location %} · {{ customer.location }}{% endif %}{% if customer.system_size %} · {{ customer.system_size }} kW{% endif %}</p>
+
+<div class="grid" style="margin:14px 0">
+    <div class="card" style="margin:0"><div class="muted">Quotation (with GST)</div><div style="font-size:22px;font-weight:bold">{% if m.total %}₹{{ m.total|floatformat:2 }}{% else %}not known{% endif %}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Amount received</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ m.paid|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Pending</div><div style="font-size:22px;font-weight:bold;color:#991b1b">{% if m.balance is not None %}{% if m.balance <= 0 %}<span class="badge ok">Paid in full</span>{% else %}₹{{ m.balance|floatformat:2 }}{% endif %}{% else %}—{% endif %}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Material total</div><div style="font-size:22px;font-weight:bold">₹{{ m.material|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Purchase amount</div><div style="font-size:22px;font-weight:bold">₹{{ m.purchase|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">In warehouse amount</div><div style="font-size:22px;font-weight:bold">₹{{ m.warehouse|floatformat:2 }}</div>{% if m.not_decided %}<div class="muted">not decided yet: ₹{{ m.not_decided|floatformat:2 }}</div>{% endif %}</div>
+    <div class="card" style="margin:0"><div class="muted">Labour wages</div><div style="font-size:22px;font-weight:bold">₹{{ m.labour|floatformat:2 }}</div></div>
+    <div class="card" style="margin:0"><div class="muted">Profit (estimate)</div><div style="font-size:22px;font-weight:bold;color:#166534">{% if m.profit is not None %}₹{{ m.profit|floatformat:2 }}{% else %}—{% endif %}</div>{% if m.margin is not None %}<div class="muted">{{ m.margin }}%</div>{% endif %}</div>
+</div>
+
+<h2>Structure and electrical work</h2>
+{% include "store/labour_readonly.html" with labour_rows=m.labour_rows %}
+
+<h2>Payments received</h2>
+<div class="tablebox"><table>
+    <thead><tr><th>Date</th><th class="right">Amount</th><th>Mode</th><th>Note</th></tr></thead>
+    <tbody>{% for p in payments %}<tr><td>{{ p.paid_on|date:"d M Y" }}</td><td class="right"><b>₹{{ p.amount|floatformat:2 }}</b></td><td>{{ p.get_mode_display }}</td><td>{{ p.note }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="muted" style="padding:14px">No payment recorded yet.</td></tr>{% endfor %}</tbody>
+</table></div>
+
+{% if purchase_items %}
+<h2>Purchase items</h2>
+<div class="tablebox"><table>
+    <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead>
+    <tbody>{% for l in purchase_items %}
+        <tr><td>{{ l.name }}{% if l.make %} <span class="muted">— {{ l.make }}</span>{% endif %}</td><td class="right">{{ l.quantity|floatformat:"-2" }} {{ l.unit }}</td><td class="right">₹{{ l.rate|floatformat:2 }}</td><td class="right">₹{{ l.amount|floatformat:2 }}</td></tr>
+    {% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% if warehouse_items %}
+<h2>Items from the warehouse</h2>
+<div class="tablebox"><table>
+    <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead>
+    <tbody>{% for l in warehouse_items %}
+        <tr><td>{{ l.name }}{% if l.make %} <span class="muted">— {{ l.make }}</span>{% endif %}</td><td class="right">{{ l.quantity|floatformat:"-2" }} {{ l.unit }}</td><td class="right">₹{{ l.rate|floatformat:2 }}</td><td class="right">₹{{ l.amount|floatformat:2 }}</td></tr>
+    {% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% if undecided_items %}
+<h2>Not decided yet</h2>
+<div class="tablebox"><table>
+    <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead>
+    <tbody>{% for l in undecided_items %}
+        <tr><td>{{ l.name }}{% if l.make %} <span class="muted">— {{ l.make }}</span>{% endif %}</td><td class="right">{{ l.quantity|floatformat:"-2" }} {{ l.unit }}</td><td class="right">₹{{ l.rate|floatformat:2 }}</td><td class="right">₹{{ l.amount|floatformat:2 }}</td></tr>
+    {% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% endblock %}

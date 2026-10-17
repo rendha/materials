@@ -11,7 +11,7 @@
         <thead><tr><th>Date</th><th>Customer</th><th class="right">Amount</th><th>Mode</th><th>Note</th></tr></thead>
         <tbody>
         {% for p in payments %}
-            <tr><td>{{ p.paid_on|date:"d M Y" }}</td><td><a href="{% url 'customer' p.customer.pk %}">{{ p.customer.name }}</a></td><td class="right"><b>₹{{ p.amount|floatformat:2 }}</b></td><td>{{ p.get_mode_display }}</td><td>{{ p.note }}</td></tr>
+            <tr><td>{{ p.paid_on|date:"d M Y" }}</td><td><a href="{% url 'boss_customer' p.customer.pk %}">{{ p.customer.name }}</a></td><td class="right"><b>₹{{ p.amount|floatformat:2 }}</b></td><td>{{ p.get_mode_display }}</td><td>{{ p.note }}</td></tr>
         {% empty %}<tr><td colspan="5" class="muted" style="padding:18px">No payment recorded yet.</td></tr>{% endfor %}
         </tbody>
     </table></div>
@@ -24,7 +24,7 @@
         <thead><tr><th>Customer</th><th class="right">Quotation</th><th class="right">Received</th><th class="right">Balance</th></tr></thead>
         <tbody>
         {% for r in rows %}
-            <tr><td><a href="{% url 'customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a><div class="muted">{{ r.customer.offer_no }}{% if r.customer.phone %} · {{ r.customer.phone }}{% endif %}</div></td>
+            <tr><td><a href="{% url 'boss_customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a><div class="muted">{{ r.customer.offer_no }}{% if r.customer.phone %} · {{ r.customer.phone }}{% endif %}</div></td>
                 <td class="right">₹{{ r.total|floatformat:2 }}</td><td class="right">₹{{ r.paid|floatformat:2 }}</td><td class="right"><b>₹{{ r.balance|floatformat:2 }}</b></td></tr>
         {% empty %}<tr><td colspan="4" class="muted" style="padding:18px">Nobody owes anything.</td></tr>{% endfor %}
         </tbody>
@@ -42,7 +42,7 @@
         <thead><tr><th>Customer</th><th class="right">Purchase</th><th class="right">Warehouse</th><th class="right">Not decided</th><th class="right">Material total</th></tr></thead>
         <tbody>
         {% for r in rows %}
-            <tr><td><a href="{% url 'customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a></td>
+            <tr><td><a href="{% url 'boss_customer' r.customer.pk %}"><b>{{ r.customer.name }}</b></a></td>
                 <td class="right">₹{{ r.purchase|floatformat:2 }}</td><td class="right">₹{{ r.warehouse|floatformat:2 }}</td>
                 <td class="right">{% if r.not_decided %}₹{{ r.not_decided|floatformat:2 }}{% else %}—{% endif %}</td><td class="right"><b>₹{{ r.material|floatformat:2 }}</b></td></tr>
         {% empty %}<tr><td colspan="5" class="muted" style="padding:18px">No material lists yet.</td></tr>{% endfor %}
@@ -53,7 +53,7 @@
     <p class="muted">{% if kind == "purchase" %}The items that have to be bought, customer by customer.{% else %}The items taken from the warehouse stock, customer by customer.{% endif %}</p>
     <div class="card"><div class="muted">Total</div><div style="font-size:22px;font-weight:bold">₹{{ total|floatformat:2 }}</div></div>
     {% for g in groups %}
-        <h2><a href="{% url 'customer' g.customer.pk %}">{{ g.customer.name }}</a> <small>₹{{ g.amount|floatformat:2 }}</small></h2>
+        <h2><a href="{% url 'boss_customer' g.customer.pk %}">{{ g.customer.name }}</a> <small>₹{{ g.amount|floatformat:2 }}</small></h2>
         <div class="tablebox"><table>
             <thead><tr><th>Item</th><th class="right">Qty</th><th class="right">Rate</th><th class="right">Amount</th></tr></thead>
             <tbody>
