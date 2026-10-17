@@ -7,9 +7,13 @@
 <div class="grid" style="margin:14px 0">
     <div class="card" style="margin:0"><div class="muted">Customers</div><div style="font-size:22px;font-weight:bold">{{ count }}</div><div class="muted">{{ this_month }} new this month</div></div>
     <div class="card" style="margin:0"><div class="muted">Quotation value (with GST)</div><div style="font-size:22px;font-weight:bold">₹{{ total|floatformat:2 }}</div>{% if unpriced %}<div class="muted">{{ unpriced }} customer{{ unpriced|pluralize }} without an amount</div>{% endif %}</div>
-    <div class="card" style="margin:0"><div class="muted">Received</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ paid|floatformat:2 }}</div></div>
-    <div class="card" style="margin:0"><div class="muted">Balance to receive</div><div style="font-size:22px;font-weight:bold;color:#991b1b">₹{{ balance|floatformat:2 }}</div></div>
-    <div class="card" style="margin:0"><div class="muted">Material cost</div><div style="font-size:22px;font-weight:bold">₹{{ material|floatformat:2 }}</div><div class="muted">labour wages ₹{{ labour|floatformat:2 }}</div></div>
+    <a class="cardlink" href="{% url 'boss_detail' 'received' %}"><div class="card" style="margin:0"><div class="muted">Received &rsaquo;</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ paid|floatformat:2 }}</div><div class="muted">tap to see every payment</div></div></a>
+    <a class="cardlink" href="{% url 'boss_detail' 'pending' %}"><div class="card" style="margin:0"><div class="muted">Balance to receive &rsaquo;</div><div style="font-size:22px;font-weight:bold;color:#991b1b">₹{{ balance|floatformat:2 }}</div><div class="muted">tap to see who owes</div></div></a>
+    <a class="cardlink" href="{% url 'boss_detail' 'material' %}"><div class="card" style="margin:0"><div class="muted">Material cost (total) &rsaquo;</div><div style="font-size:22px;font-weight:bold">₹{{ material|floatformat:2 }}</div>
+        <div class="muted">purchase ₹{{ purchase|floatformat:2 }} · warehouse ₹{{ warehouse|floatformat:2 }}{% if not_decided %} · not decided ₹{{ not_decided|floatformat:2 }}{% endif %}</div></div></a>
+    <a class="cardlink" href="{% url 'boss_detail' 'purchase' %}"><div class="card" style="margin:0"><div class="muted">Purchase amount &rsaquo;</div><div style="font-size:22px;font-weight:bold">₹{{ purchase|floatformat:2 }}</div><div class="muted">to be bought · tap for the items</div></div></a>
+    <a class="cardlink" href="{% url 'boss_detail' 'warehouse' %}"><div class="card" style="margin:0"><div class="muted">In warehouse amount &rsaquo;</div><div style="font-size:22px;font-weight:bold">₹{{ warehouse|floatformat:2 }}</div><div class="muted">from stock · tap for the items</div></div></a>
+    <div class="card" style="margin:0"><div class="muted">Labour wages</div><div style="font-size:22px;font-weight:bold">₹{{ labour|floatformat:2 }}</div></div>
     <div class="card" style="margin:0"><div class="muted">Profit (estimate)</div><div style="font-size:22px;font-weight:bold;color:#166534">₹{{ profit|floatformat:2 }}</div>{% if margin is not None %}<div class="muted">{{ margin }}% of the amount without GST</div>{% endif %}</div>
     <div class="card" style="margin:0"><div class="muted">Warehouse stock value</div><div style="font-size:22px;font-weight:bold">₹{{ stock_value|floatformat:2 }}</div></div>
 </div>
@@ -35,8 +39,8 @@
     <button class="btn light" type="submit">Search</button>
 </form>
 <div class="tablebox">
-<table style="min-width:900px">
-    <thead><tr><th>Customer</th><th>Status</th><th class="right">Quotation</th><th class="right">Received</th><th class="right">Balance</th><th class="right">Material</th><th class="right">Labour</th><th class="right">Profit</th></tr></thead>
+<table style="min-width:1400px">
+    <thead><tr><th>Customer</th><th>Status</th><th class="right">Quotation</th><th class="right">Received</th><th class="right">Balance</th><th class="right">Material</th><th class="right">Purchase</th><th class="right">Warehouse</th><th>Structure / Electrical</th><th class="right">Labour</th><th class="right">Profit</th></tr></thead>
     <tbody>
     {% for r in rows %}
         <tr>
@@ -46,11 +50,14 @@
             <td class="right">₹{{ r.paid|floatformat:2 }}</td>
             <td class="right">{% if r.balance is not None %}{% if r.balance <= 0 %}<span class="badge ok">Paid</span>{% else %}<b>₹{{ r.balance|floatformat:2 }}</b>{% endif %}{% else %}—{% endif %}</td>
             <td class="right">₹{{ r.material|floatformat:2 }}</td>
+            <td class="right">₹{{ r.purchase|floatformat:2 }}</td>
+            <td class="right">₹{{ r.warehouse|floatformat:2 }}</td>
+            <td>{% for x in r.labour_rows %}<div style="white-space:nowrap">{{ x.kind|capfirst }} ₹{{ x.amount|floatformat:0 }} · {% if x.worker_type == "contract" %}<span class="badge warn">Contract</span>{% else %}<span class="badge ok">Staff</span>{% endif %}{% if x.worker_name %} {{ x.worker_name }}{% endif %}{% if x.worker_type == "contract" and x.advance %}<span class="muted"> (advance ₹{{ x.advance|floatformat:0 }})</span>{% endif %}</div>{% empty %}<span class="muted">—</span>{% endfor %}</td>
             <td class="right">₹{{ r.labour|floatformat:2 }}</td>
             <td class="right">{% if r.profit is not None %}<b style="color:{% if r.profit < 0 %}#991b1b{% else %}#166534{% endif %}">₹{{ r.profit|floatformat:2 }}</b>{% if r.margin is not None %}<div class="muted">{{ r.margin }}%</div>{% endif %}{% else %}—{% endif %}</td>
         </tr>
     {% empty %}
-        <tr><td colspan="8" class="muted" style="padding:18px">No customers found.</td></tr>
+        <tr><td colspan="11" class="muted" style="padding:18px">No customers found.</td></tr>
     {% endfor %}
     </tbody>
 </table>

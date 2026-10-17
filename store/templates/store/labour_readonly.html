@@ -1,0 +1,12 @@
+{# Structure and electrical work: the amount, and whether it is company staff or a contractor (read only) #}
+<div class="tablebox"><table>
+    <thead><tr><th>Work</th><th class="right">Amount</th><th>Done by</th><th class="right">Advance paid</th><th class="right">Balance to contractor</th></tr></thead>
+    <tbody>
+    {% for x in labour_rows %}
+        <tr><td>{{ x.label }}</td><td class="right"><b>₹{{ x.amount|floatformat:2 }}</b></td>
+            <td>{% if x.worker_type == "contract" %}<span class="badge warn">Contract</span>{% else %}<span class="badge ok">Company staff</span>{% endif %}{% if x.worker_name %} {{ x.worker_name }}{% endif %}</td>
+            <td class="right">{% if x.worker_type == "contract" %}₹{{ x.advance|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="right">{% if x.worker_type == "contract" %}₹{{ x.balance|floatformat:2 }}{% else %}—{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="5" class="muted" style="padding:14px">No structure / electrical amount yet.</td></tr>{% endfor %}
+    </tbody>
+</table></div>

@@ -899,6 +899,8 @@ def _customer_money(customer):
     Other charges of the quotation (transport, KSEB fee, loading, documentation) are not on this site, so they are not counted."""
     lines = [l for l in customer.lines.all() if l.quantity > 0]
     material = sum((l.amount for l in lines), ZERO)
+    purchase = sum((l.amount for l in lines if l.source == Line.PURCHASE), ZERO)
+    in_warehouse = sum((l.amount for l in lines if l.source == Line.WAREHOUSE), ZERO)
     labour = sum((x.amount for x in customer.labour.all()), ZERO)
     paid = sum((p.amount for p in customer.payments.all()), ZERO)
     total = customer.total_due
@@ -906,7 +908,8 @@ def _customer_money(customer):
     profit = (without_gst - material - labour) if without_gst is not None else None
     margin = (profit / without_gst * 100).quantize(Decimal("0.1")) if profit is not None and without_gst else None
     return {"customer": customer, "total": total, "paid": paid, "balance": total - paid if total > 0 else None,
-            "material": material, "labour": labour, "profit": profit, "margin": margin,
+            "material": material, "purchase": purchase, "warehouse": in_warehouse, "not_decided": material - purchase - in_warehouse,
+            "labour": labour, "labour_rows": list(customer.labour.all()), "profit": profit, "margin": margin,
             "undecided": sum(1 for l in lines if l.source == Line.UNDECIDED),
             "short": sum(1 for l in lines if l.store_status == Line.SHORT)}
 
@@ -934,9 +937,53 @@ def boss_home(request):
         "rows": rows, "q": request.GET.get("q", ""), "count": len(rows), "this_month": this_month,
         "total": total, "paid": paid, "balance": total - paid,
         "material": sum((r["material"] for r in rows), ZERO), "labour": sum((r["labour"] for r in rows), ZERO),
+        "purchase": sum((r["purchase"] for r in rows), ZERO), "warehouse": sum((r["warehouse"] for r in rows), ZERO),
+        "not_decided": sum((r["not_decided"] for r in rows), ZERO),
         "profit": profit_total, "margin": (profit_total / without_gst * 100).quantize(Decimal("0.1")) if without_gst else None,
         "unpriced": len(rows) - len(priced), "stock_value": stock_value,
         "owing": sorted([r for r in rows if r["balance"] is not None and r["balance"] > 0], key=lambda r: r["balance"], reverse=True)[:8],
         "waiting": [r for r in rows if r["customer"].status == Customer.DRAFT and r["undecided"]],
         "short": [r for r in rows if r["short"]],
         "empty_stock": list(Stock.objects.filter(quantity__lte=0)[:20])})
+
+
+BOSS_DETAILS = {
+    "received": "Money received",
+    "pending": "Balance to receive",
+    "material": "Material cost: purchase and warehouse",
+    "purchase": "Purchase amount: what has to be bought",
+    "warehouse": "Warehouse amount: what is taken from the warehouse",
+}
+
+
+@login_required
+def boss_detail(request, kind):
+    """The boss clicks a number of the dashboard and sees what it is made of."""
+    if not is_boss(request.user):
+        return HttpResponseForbidden("Only the boss sees this page.")
+    if kind not in BOSS_DETAILS:
+        raise Http404()
+    context = {"kind": kind, "title": BOSS_DETAILS[kind]}
+    customers = Customer.objects.prefetch_related("lines", "labour", "payments")
+    if kind == "received":
+        payments = list(Payment.objects.select_related("customer").order_by("-paid_on", "-id"))
+        context.update(payments=payments, total=sum((p.amount for p in payments), ZERO))
+    else:
+        rows = [_customer_money(c) for c in customers]
+        if kind == "pending":
+            rows = sorted([r for r in rows if r["balance"] is not None and r["balance"] > 0], key=lambda r: r["balance"], reverse=True)
+            context.update(rows=rows, total=sum((r["balance"] for r in rows), ZERO), total_quoted=sum((r["total"] for r in rows), ZERO),
+                           total_paid=sum((r["paid"] for r in rows), ZERO))
+        elif kind == "material":
+            rows = [r for r in rows if r["material"] > 0]
+            context.update(rows=rows, total=sum((r["material"] for r in rows), ZERO), total_purchase=sum((r["purchase"] for r in rows), ZERO),
+                           total_warehouse=sum((r["warehouse"] for r in rows), ZERO), total_not_decided=sum((r["not_decided"] for r in rows), ZERO))
+        else:
+            source = Line.PURCHASE if kind == "purchase" else Line.WAREHOUSE
+            groups = []
+            for r in rows:
+                items = [l for l in r["customer"].lines.all() if l.quantity > 0 and l.source == source]
+                if items:
+                    groups.append({"customer": r["customer"], "items": items, "amount": sum((l.amount for l in items), ZERO)})
+            context.update(groups=groups, total=sum((g["amount"] for g in groups), ZERO))
+    return render(request, "store/boss_detail.html", context)

@@ -13,6 +13,9 @@
         <div style="font-size:22px;font-weight:bold;color:#991b1b">{% if customer.total_due %}{% if balance <= 0 %}<span class="badge ok">Paid in full</span>{% else %}₹{{ balance|floatformat:2 }}{% endif %}{% else %}—{% endif %}</div></div>
 </div>
 
+<h2>Structure and electrical work</h2>
+{% include "store/labour_readonly.html" with labour_rows=customer.labour.all %}
+
 <h2>Add a payment</h2>
 <form method="post" class="card">{% csrf_token %}<input type="hidden" name="action" value="add_payment">
     <div class="actions" style="margin:0">
